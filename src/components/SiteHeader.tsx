@@ -1,14 +1,18 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/breathe-logo.png";
 import { Button } from "@/components/ui/button";
-
-const nav = [
-  { to: "/services", label: "Services" },
-  { to: "/blog", label: "Blog" },
-  { to: "/start", label: "Start your therapy" },
-] as const;
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useT } from "@/lib/i18n";
 
 export function SiteHeader() {
+  const { t } = useT();
+  const nav = [
+    { to: "/services", label: t("nav.services") },
+    { to: "/resources", label: t("nav.resources") },
+    { to: "/start", label: t("nav.start") },
+    { to: "/merch", label: t("nav.merch") },
+  ] as const;
+
   return (
     <header className="absolute top-0 left-0 right-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
@@ -19,7 +23,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-9 md:flex">
+        <nav className="hidden items-center gap-8 md:flex">
           {nav.map((n) => (
             <Link
               key={n.to}
@@ -33,14 +37,15 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageToggle />
           <Button asChild variant="ghost" className="rounded-full text-foreground hover:bg-accent">
-            <Link to="/login">Log in</Link>
+            <Link to="/login">{t("nav.login")}</Link>
           </Button>
           <Button
             asChild
             className="rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90"
           >
-            <Link to="/signup">Sign up</Link>
+            <Link to="/signup">{t("nav.signup")}</Link>
           </Button>
         </div>
       </div>

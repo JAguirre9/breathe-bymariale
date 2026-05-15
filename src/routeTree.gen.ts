@@ -12,8 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as ServicesRouteImport } from './routes/services'
+import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as MerchRouteImport } from './routes/merch'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as BlogRouteImport } from './routes/blog'
 import { Route as IndexRouteImport } from './routes/index'
 
 const StartRoute = StartRouteImport.update({
@@ -31,14 +32,19 @@ const ServicesRoute = ServicesRouteImport.update({
   path: '/services',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MerchRoute = MerchRouteImport.update({
+  id: '/merch',
+  path: '/merch',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const BlogRoute = BlogRouteImport.update({
-  id: '/blog',
-  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -49,16 +55,18 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/blog': typeof BlogRoute
   '/login': typeof LoginRoute
+  '/merch': typeof MerchRoute
+  '/resources': typeof ResourcesRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/blog': typeof BlogRoute
   '/login': typeof LoginRoute
+  '/merch': typeof MerchRoute
+  '/resources': typeof ResourcesRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
@@ -66,24 +74,48 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/blog': typeof BlogRoute
   '/login': typeof LoginRoute
+  '/merch': typeof MerchRoute
+  '/resources': typeof ResourcesRoute
   '/services': typeof ServicesRoute
   '/signup': typeof SignupRoute
   '/start': typeof StartRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/blog' | '/login' | '/services' | '/signup' | '/start'
+  fullPaths:
+    | '/'
+    | '/login'
+    | '/merch'
+    | '/resources'
+    | '/services'
+    | '/signup'
+    | '/start'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/blog' | '/login' | '/services' | '/signup' | '/start'
-  id: '__root__' | '/' | '/blog' | '/login' | '/services' | '/signup' | '/start'
+  to:
+    | '/'
+    | '/login'
+    | '/merch'
+    | '/resources'
+    | '/services'
+    | '/signup'
+    | '/start'
+  id:
+    | '__root__'
+    | '/'
+    | '/login'
+    | '/merch'
+    | '/resources'
+    | '/services'
+    | '/signup'
+    | '/start'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  BlogRoute: typeof BlogRoute
   LoginRoute: typeof LoginRoute
+  MerchRoute: typeof MerchRoute
+  ResourcesRoute: typeof ResourcesRoute
   ServicesRoute: typeof ServicesRoute
   SignupRoute: typeof SignupRoute
   StartRoute: typeof StartRoute
@@ -112,18 +144,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ServicesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/merch': {
+      id: '/merch'
+      path: '/merch'
+      fullPath: '/merch'
+      preLoaderRoute: typeof MerchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/blog': {
-      id: '/blog'
-      path: '/blog'
-      fullPath: '/blog'
-      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -138,8 +177,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  BlogRoute: BlogRoute,
   LoginRoute: LoginRoute,
+  MerchRoute: MerchRoute,
+  ResourcesRoute: ResourcesRoute,
   ServicesRoute: ServicesRoute,
   SignupRoute: SignupRoute,
   StartRoute: StartRoute,
