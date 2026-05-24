@@ -61,8 +61,8 @@ function Index() {
 
           <div className="mt-14 grid max-w-md grid-cols-3 gap-6">
             {[
-              { n: "+100", l: t("home.stat.sessions") },
-              { n: "+5", l: t("home.stat.workshops") },
+              { n: "+99", l: t("home.stat.sessions") },
+              { n: "+10", l: t("home.stat.workshops") },
               { n: "4.9★", l: t("home.stat.rating") },
             ].map((s) => (
               <div key={s.l}>

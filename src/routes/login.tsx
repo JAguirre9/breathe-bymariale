@@ -1,9 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { useState } from "react";
+import { logInUserFn } from "../lib/db.functions";
 
 export const Route = createFileRoute("/login")({
   head: () => ({ meta: [{ title: "Log in — Breathe" }] }),
@@ -12,6 +14,37 @@ export const Route = createFileRoute("/login")({
 
 function Login() {
   const { t } = useT();
+  const router = useRouter();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const result = await (logInUserFn as any)({ data: { email, password } });
+
+      if (result.success) {
+        alert(t("auth.login.success") || "Welcome back!");
+        router.navigate({ to: "/" });
+      } else {
+        if (result.errorCode === "INVALID_CREDENTIALS") {
+          alert(t("auth.error.invalidCredentials") || "Invalid email or password.");
+        } else {
+          alert(result.errorMessage || t("auth.error.generic") || "An error occurred during log in.");
+        }
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert(`Connection Error: ${error.message || String(error)}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
@@ -19,19 +52,40 @@ function Login() {
         <div className="rounded-3xl bg-card p-10 shadow-[var(--shadow-card)]">
           <h1 className="font-display text-3xl font-semibold text-foreground">{t("auth.welcome")}</h1>
           <p className="mt-2 text-sm text-foreground/60">{t("auth.welcome.sub")}</p>
-          <form className="mt-8 space-y-4">
+          
+          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             <div>
               <Label htmlFor="email">{t("auth.email")}</Label>
-              <Input id="email" type="email" className="mt-1.5 rounded-xl" />
+              <Input 
+                id="email" 
+                type="email" 
+                required
+                className="mt-1.5 rounded-xl" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
             <div>
               <Label htmlFor="password">{t("auth.password")}</Label>
-              <Input id="password" type="password" className="mt-1.5 rounded-xl" />
+              <Input 
+                id="password" 
+                type="password" 
+                required
+                className="mt-1.5 rounded-xl" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <Button className="mt-2 w-full rounded-full bg-primary py-6 text-primary-foreground hover:bg-primary/90">
-              {t("auth.login")}
+            
+            <Button 
+              type="submit"
+              disabled={loading}
+              className="mt-2 w-full rounded-full bg-primary py-6 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            >
+              {loading ? "Logging in..." : t("auth.login")}
             </Button>
           </form>
+          
           <p className="mt-6 text-center text-sm text-foreground/60">
             {t("auth.new")}{" "}
             <Link to="/signup" className="font-medium text-primary">
