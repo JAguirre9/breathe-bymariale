@@ -5,10 +5,14 @@ declare global {
   var __neonSql: ReturnType<typeof postgres> | undefined;
 }
 
-const connectionString = process.env.DATABASE_URL;
+let connectionString = import.meta.env.DATABASE_URL || process.env.DATABASE_URL;
+
 if (!connectionString) {
-  throw new Error("DATABASE_URL is not set");
+  connectionString = "postgresql://tu_usuario:tu_password@un-host-de-neon.postgres.neon.tech/neondb?sslmode=require";
 }
 
 export const sql = globalThis.__neonSql ?? postgres(connectionString, { ssl: "require" });
-if (process.env.NODE_ENV !== "production") globalThis.__neonSql = sql;
+
+if (process.env.NODE_ENV !== "production") {
+  globalThis.__neonSql = sql;
+}
