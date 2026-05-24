@@ -47,6 +47,13 @@ function Login() {
     }
   };
 
+  const useMockUser = () => {
+    if (typeof window === "undefined") return;
+    const mock = { id: "mock-user-1", name: "Test Consultant", email: "test@breathe.local" };
+    localStorage.setItem("breathe.user", JSON.stringify(mock));
+    router.navigate({ to: "/dashboard" });
+  };
+
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
@@ -85,6 +92,15 @@ function Login() {
               className="mt-2 w-full rounded-full bg-primary py-6 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
               {loading ? "Logging in..." : t("auth.login")}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={useMockUser}
+              className="w-full rounded-full"
+            >
+              Use mock user (dev)
             </Button>
           </form>
           
