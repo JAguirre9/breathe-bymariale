@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { getIntakeFn, submitIntakeFn } from "@/lib/db.functions";
+
+const PROFESSIONALS = [
+  { id: "mariale", name: "Mariale Marulanda", role: "Founder & Specialist" },
+];
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Breathe" }] }),
@@ -38,6 +43,18 @@ function Dashboard() {
   const [mood, setMood] = useState(3);
   const [noteText, setNoteText] = useState("");
 
+  // Intake form state
+  const [intakeChecked, setIntakeChecked] = useState(false);
+  const [intakeDone, setIntakeDone] = useState(false);
+  const [intake, setIntake] = useState({
+    preferredName: "",
+    age: "",
+    feelings: "",
+    priorSessions: "no",
+    contactMethod: "whatsapp",
+  });
+  const [intakeSubmitting, setIntakeSubmitting] = useState(false);
+
   // Guard + load
   useEffect(() => {
     const raw = typeof window !== "undefined" ? localStorage.getItem("breathe.user") : null;
@@ -46,13 +63,44 @@ function Dashboard() {
       return;
     }
     const u = JSON.parse(raw);
-    setUserId(String(u.id));
+    const uid = String(u.id);
+    setUserId(uid);
     setUserName(u.name || u.email || "");
     const evRaw = localStorage.getItem(`breathe.events.${u.id}`);
     const ntRaw = localStorage.getItem(`breathe.notes.${u.id}`);
     if (evRaw) setEvents(JSON.parse(evRaw));
     if (ntRaw) setNotes(JSON.parse(ntRaw));
+
+    (getIntakeFn as any)({ data: { userId: uid } })
+      .then((r: any) => {
+        setIntakeDone(!!r?.exists);
+        setIntakeChecked(true);
+      })
+      .catch(() => setIntakeChecked(true));
   }, [router]);
+
+  const submitIntake = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    setIntakeSubmitting(true);
+    try {
+      const res = await (submitIntakeFn as any)({
+        data: {
+          userId,
+          professional: PROFESSIONALS[0].name,
+          preferredName: intake.preferredName.trim(),
+          age: Number(intake.age),
+          feelings: intake.feelings.trim(),
+          priorSessions: intake.priorSessions,
+          contactMethod: intake.contactMethod,
+        },
+      });
+      if (res?.success) setIntakeDone(true);
+      else alert(res?.errorMessage || "Could not submit. Try again.");
+    } finally {
+      setIntakeSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (userId) localStorage.setItem(`breathe.events.${userId}`, JSON.stringify(events));
@@ -144,6 +192,27 @@ function Dashboard() {
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-2">
             <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.sessions")}</h2>
 
+            <div className="mb-6">
+              <p className="mb-2 text-xs uppercase tracking-wide text-foreground/50">Specialists</p>
+              <ul className="space-y-2">
+                {PROFESSIONALS.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                      {p.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{p.name}</p>
+                      <p className="text-xs text-foreground/60">{p.role}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+
             <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
               <Input
                 placeholder={t("dash.sessions.placeholder")}
@@ -188,6 +257,117 @@ function Dashboard() {
               </ul>
             )}
           </section>
+
+          {/* Intake form */}
+          {intakeChecked && !intakeDone && (
+            <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-3">
+              <h2 className="mb-1 font-display text-xl font-semibold">Before we begin</h2>
+              <p className="mb-5 text-sm text-foreground/60">
+                A few questions so Mariale can hold space for you.
+              </p>
+              <form onSubmit={submitIntake} className="space-y-4">
+                <div>
+                  <Label htmlFor="pname">How'd you like to be called?</Label>
+                  <Input
+                    id="pname"
+                    required
+                    value={intake.preferredName}
+                    onChange={(e) => setIntake((s) => ({ ...s, preferredName: e.target.value }))}
+                    className="mt-1.5 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="age">Age</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    min={1}
+                    max={120}
+                    required
+                    value={intake.age}
+                    onChange={(e) => setIntake((s) => ({ ...s, age: e.target.value }))}
+                    className="mt-1.5 rounded-xl sm:w-32"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="feelings">
+                    How do you feel lately — feel free to tell me anything
+                  </Label>
+                  <Textarea
+                    id="feelings"
+                    required
+                    value={intake.feelings}
+                    onChange={(e) => setIntake((s) => ({ ...s, feelings: e.target.value }))}
+                    className="mt-1.5 min-h-28 rounded-xl"
+                  />
+                </div>
+                <div>
+                  <Label>Have you ever had sessions before?</Label>
+                  <div className="mt-2 flex gap-3">
+                    {["yes", "no"].map((v) => (
+                      <label
+                        key={v}
+                        className={`cursor-pointer rounded-full border px-4 py-2 text-sm capitalize transition ${
+                          intake.priorSessions === v
+                            ? "border-primary bg-primary/15 text-primary"
+                            : "border-border/60 bg-background/50 text-foreground/70"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="prior"
+                          value={v}
+                          className="sr-only"
+                          checked={intake.priorSessions === v}
+                          onChange={() => setIntake((s) => ({ ...s, priorSessions: v }))}
+                        />
+                        {v}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <Label>How'd you like to be contacted?</Label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {[
+                      { v: "whatsapp", l: "WhatsApp" },
+                      { v: "email", l: "Email" },
+                      { v: "phone", l: "Phone call" },
+                    ].map((o) => (
+                      <label
+                        key={o.v}
+                        className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                          intake.contactMethod === o.v
+                            ? "border-primary bg-primary/15 text-primary"
+                            : "border-border/60 bg-background/50 text-foreground/70"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="contact"
+                          value={o.v}
+                          className="sr-only"
+                          checked={intake.contactMethod === o.v}
+                          onChange={() => setIntake((s) => ({ ...s, contactMethod: o.v }))}
+                        />
+                        {o.l}
+                      </label>
+                    ))}
+                  </div>
+                </div>
+                <p className="text-sm italic text-foreground/70">
+                  This is a big step, thanks for trusting me, see you soon 💜
+                </p>
+                <Button
+                  type="submit"
+                  disabled={intakeSubmitting}
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {intakeSubmitting ? "Sending..." : "Submit"}
+                </Button>
+              </form>
+            </section>
+          )}
 
           {/* Notes / mood */}
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-3">
