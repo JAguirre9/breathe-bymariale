@@ -28,8 +28,10 @@ function Login() {
       const result = await (logInUserFn as any)({ data: { email, password } });
 
       if (result.success) {
-        alert(t("auth.login.success") || "Welcome back!");
-        router.navigate({ to: "/" });
+        if (typeof window !== "undefined") {
+          localStorage.setItem("breathe.user", JSON.stringify(result.user));
+        }
+        router.navigate({ to: "/dashboard" });
       } else {
         if (result.errorCode === "INVALID_CREDENTIALS") {
           alert(t("auth.error.invalidCredentials") || "Invalid email or password.");

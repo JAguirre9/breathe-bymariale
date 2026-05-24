@@ -112,6 +112,30 @@ const dict: Dict = {
   "auth.error.invalidCredentials":{en : "Invalid email or password.", es : "Correo o contraseña incorrectos."},
   "auth.error.generic": {en : "A server error occurred. Please try again.", es : "Hubo un error en el servidor. Inténtalo de nuevo."},
   "auth.signup.success": {en : "Account registered successfully!", es : "¡Cuenta registrada con éxito!"},
+  "auth.login.success": { en: "Welcome back!", es: "¡Bienvenido de nuevo!" },
+
+  // Dashboard
+  "dash.welcome": { en: "Welcome back,", es: "Bienvenido de nuevo," },
+  "dash.title": { en: "Your space", es: "Tu espacio" },
+  "dash.logout": { en: "Log out", es: "Cerrar sesión" },
+  "dash.calendar": { en: "Calendar", es: "Calendario" },
+  "dash.sessions": { en: "Sessions", es: "Sesiones" },
+  "dash.sessions.placeholder": { en: "Session with…", es: "Sesión con…" },
+  "dash.sessions.empty": { en: "No sessions scheduled for this day.", es: "No hay sesiones para este día." },
+  "dash.add": { en: "Add", es: "Añadir" },
+  "dash.notes": { en: "Session notes & mood", es: "Notas y estado de ánimo" },
+  "dash.notes.sub": {
+    en: "Notate how you feel during or after a session.",
+    es: "Anota cómo te sientes durante o después de una sesión.",
+  },
+  "dash.mood": { en: "How are you feeling?", es: "¿Cómo te sientes?" },
+  "dash.note.label": { en: "Notes", es: "Notas" },
+  "dash.note.placeholder": {
+    en: "What came up today? Insights, feelings, breakthroughs…",
+    es: "¿Qué surgió hoy? Reflexiones, sentimientos, descubrimientos…",
+  },
+  "dash.save": { en: "Save entry", es: "Guardar entrada" },
+  "dash.notes.empty": { en: "No notes yet for this day.", es: "Aún no hay notas para este día." },
 };
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: keyof typeof dict) => string };
