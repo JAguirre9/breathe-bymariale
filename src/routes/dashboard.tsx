@@ -7,6 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { getIntakeFn, submitIntakeFn } from "@/lib/db.functions";
+
+const PROFESSIONALS = [
+  { id: "mariale", name: "Mariale Marulanda", role: "Founder & Specialist" },
+];
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — Breathe" }] }),
