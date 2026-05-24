@@ -1,0 +1,15 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Tu primera tabla de ejemplo
+model Proyecto {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  creadoEn    DateTime @default(now())
+}
