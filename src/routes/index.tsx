@@ -8,13 +8,13 @@ import logo from "@/assets/breathe-logo.png";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Breathe — Online therapy to slow down and heal" },
+      { title: "Breathe - Online therapy to slow down and heal" },
       {
         name: "description",
         content:
           "Breathe is a soft space for online therapy. Connect with caring specialists, at your rhythm, from anywhere.",
       },
-      { property: "og:title", content: "Breathe — Online therapy" },
+      { property: "og:title", content: "Breathe Online therapy" },
       {
         property: "og:description",
         content: "A soft space for online therapy. Start your journey today.",
@@ -61,8 +61,8 @@ function Index() {
 
           <div className="mt-14 grid max-w-md grid-cols-3 gap-6">
             {[
-              { n: "+12k", l: t("home.stat.sessions") },
-              { n: "+200", l: t("home.stat.specialists") },
+              { n: "+100", l: t("home.stat.sessions") },
+              { n: "+5", l: t("home.stat.workshops") },
               { n: "4.9★", l: t("home.stat.rating") },
             ].map((s) => (
               <div key={s.l}>

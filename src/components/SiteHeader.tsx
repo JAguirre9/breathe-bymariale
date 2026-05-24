@@ -17,8 +17,8 @@ export function SiteHeader() {
     <header className="absolute top-0 left-0 right-0 z-50">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Breathe" className="h-9 w-9" />
-          <span className="text-2xl font-display font-semibold tracking-tight text-foreground">
+          <img src={logo} alt="Breathe" className="h-12 w-12" />
+          <span className="text-3xl font-display font-semibold tracking-tight text-foreground">
             Breathe
           </span>
         </Link>

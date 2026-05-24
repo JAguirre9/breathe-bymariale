@@ -24,10 +24,10 @@ const dict: Dict = {
   "home.cta.start": { en: "Start your therapy", es: "Inicia tu terapia" },
   "home.cta.explore": { en: "Explore services →", es: "Ver servicios →" },
   "home.stat.sessions": { en: "Sessions held", es: "Sesiones realizadas" },
-  "home.stat.specialists": { en: "Specialists", es: "Especialistas" },
+  "home.stat.workshops": { en: "Workshops", es: "Talleres" },
   "home.stat.rating": { en: "Average rating", es: "Calificación promedio" },
   "home.session24": { en: "Session in 24h", es: "Sesión en 24h" },
-  "home.session24.sub": { en: "Match with a specialist today", es: "Encuentra un especialista hoy" },
+  "home.session24.sub": { en: "Find a space today", es: "Encuentra un espacio hoy" },
 
   // Module cards
   "mod.services.copy": {
