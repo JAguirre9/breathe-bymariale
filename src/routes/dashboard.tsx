@@ -43,6 +43,18 @@ function Dashboard() {
   const [mood, setMood] = useState(3);
   const [noteText, setNoteText] = useState("");
 
+  // Intake form state
+  const [intakeChecked, setIntakeChecked] = useState(false);
+  const [intakeDone, setIntakeDone] = useState(false);
+  const [intake, setIntake] = useState({
+    preferredName: "",
+    age: "",
+    feelings: "",
+    priorSessions: "no",
+    contactMethod: "whatsapp",
+  });
+  const [intakeSubmitting, setIntakeSubmitting] = useState(false);
+
   // Guard + load
   useEffect(() => {
     const raw = typeof window !== "undefined" ? localStorage.getItem("breathe.user") : null;
@@ -51,13 +63,44 @@ function Dashboard() {
       return;
     }
     const u = JSON.parse(raw);
-    setUserId(String(u.id));
+    const uid = String(u.id);
+    setUserId(uid);
     setUserName(u.name || u.email || "");
     const evRaw = localStorage.getItem(`breathe.events.${u.id}`);
     const ntRaw = localStorage.getItem(`breathe.notes.${u.id}`);
     if (evRaw) setEvents(JSON.parse(evRaw));
     if (ntRaw) setNotes(JSON.parse(ntRaw));
+
+    (getIntakeFn as any)({ data: { userId: uid } })
+      .then((r: any) => {
+        setIntakeDone(!!r?.exists);
+        setIntakeChecked(true);
+      })
+      .catch(() => setIntakeChecked(true));
   }, [router]);
+
+  const submitIntake = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+    setIntakeSubmitting(true);
+    try {
+      const res = await (submitIntakeFn as any)({
+        data: {
+          userId,
+          professional: PROFESSIONALS[0].name,
+          preferredName: intake.preferredName.trim(),
+          age: Number(intake.age),
+          feelings: intake.feelings.trim(),
+          priorSessions: intake.priorSessions,
+          contactMethod: intake.contactMethod,
+        },
+      });
+      if (res?.success) setIntakeDone(true);
+      else alert(res?.errorMessage || "Could not submit. Try again.");
+    } finally {
+      setIntakeSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     if (userId) localStorage.setItem(`breathe.events.${userId}`, JSON.stringify(events));
