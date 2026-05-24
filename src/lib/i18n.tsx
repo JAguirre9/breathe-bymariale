@@ -113,6 +113,33 @@ const dict: Dict = {
   "auth.error.generic": {en : "A server error occurred. Please try again.", es : "Hubo un error en el servidor. Inténtalo de nuevo."},
   "auth.signup.success": {en : "Account registered successfully!", es : "¡Cuenta registrada con éxito!"},
   "auth.login.success": { en: "Welcome back!", es: "¡Bienvenido de nuevo!" },
+  
+  //Sign up Form
+
+  "reg.form.begin":{ en: "Before we begin", es: "Antes de Comenzar" },
+  "reg.form.questions": { 
+    en: "A few questions so Mariale can hold space for you.",
+    es: "Un par de preguntas para que agendar un espacio con Mariale."
+  },
+  "reg.form.called": { en: "How'd you like to be called?", es : "Como te gustaria que te llamaramos?"},
+  "reg.form.phNum": { en: "Phone Number", es : "Numero de Telefono"},
+  "reg.form.age": {en: "Age", es:"Edad"},
+  "reg.form.feelings": {
+    en : "How do you feel lately - feel free to tell me anything",
+    es : "Como te has sentido recientemente - sientete en confianza de contarme lo que quieras"
+  },
+  "reg.form.priorSess": {
+    en: "Have you ever had sessions before?", 
+    es: "Has asistido a alguna sesion antes?"
+  },
+  "reg.form.contact": { en : "How'd you like to be contacted?", es : "Como te gustaria ser contactado?"},
+  "reg.form.thanks": {
+    en : "This is a big step, thanks for trusting me, see you soon 💜",
+    es : "Este es un gran paso, gracias por confiar en mi, nos vemos pronto💜"
+  },
+  "reg.form.submit": { en : "Submit Form", es : "Enviar Formulario"},
+  "reg.form.alreadyAccount": {en : "Already have an account?", es: "Ya tienes una cuenta?"},
+
 
   // Dashboard
   "dash.welcome": { en: "Welcome back,", es: "Bienvenido de nuevo," },

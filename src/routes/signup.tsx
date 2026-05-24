@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-// Importa aquí tu función de base de datos para guardar el formulario
-// import { saveIntakeFormFn } from "../lib/db.functions"; 
+import { useT } from "@/lib/i18n"; // <-- Importación del hook de traducciones
 
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Before we begin - Breathe" }] }),
@@ -14,10 +13,11 @@ export const Route = createFileRoute("/signup")({
 });
 
 function IntakeForm() {
+  const { t } = useT(); // <-- Inicialización del hook
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // El estado de tu formulario con todas las variables necesarias
   const [intake, setIntake] = useState({
     preferredName: "",
     age: "",
@@ -33,21 +33,15 @@ function IntakeForm() {
     setIsSubmitting(true);
 
     try {
-      // Unimos el código de país con el número para guardarlo completo
       const fullPhoneNumber = `${intake.phoneCode} ${intake.phoneNumber}`;
       
       console.log("Datos enviados para evaluación:", {
         ...intake,
         fullPhone: fullPhoneNumber
       });
-      
-      // Aquí enviarías los datos a tu backend
-      // await saveIntakeFormFn({ data: { ...intake, fullPhone: fullPhoneNumber } });
-      
-      // Simulamos el tiempo de petición al servidor
+
       await new Promise((resolve) => setTimeout(resolve, 1500));
       
-      // Mostramos la pantalla de éxito
       setIsSuccess(true);
       
     } catch (error: any) {
@@ -67,15 +61,16 @@ function IntakeForm() {
           /* Formulario de Evaluación (Intake) */
           <section className="rounded-3xl bg-card p-8 shadow-[var(--shadow-card)]">
             <h2 className="mb-1 font-display text-2xl font-semibold text-foreground">
-              Before we begin
+              {t("reg.form.begin")}
             </h2>
+
             <p className="mb-8 text-sm text-foreground/60">
-              A few questions so Mariale can hold space for you. Once submitted, we will review your answers and contact you to grant access.
+              {t("reg.form.questions")}
             </p>
             
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <Label htmlFor="pname">How'd you like to be called?</Label>
+                <Label htmlFor="pname">{t("reg.form.called")}</Label>
                 <Input
                   id="pname"
                   required
@@ -86,9 +81,9 @@ function IntakeForm() {
               </div>
 
               <div>
-                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <Label htmlFor="phoneNumber">{t("reg.form.phNum")}</Label>
                 <div className="mt-1.5 flex gap-2">
-                  {/* country selector */}
+                  {/* Selector de país */}
                   <select
                     value={intake.phoneCode}
                     onChange={(e) => setIntake({ ...intake, phoneCode: e.target.value })}
@@ -100,10 +95,9 @@ function IntakeForm() {
                     <option value="+52">🇲🇽 +52</option>
                     <option value="+54">🇦🇷 +54</option>
                     <option value="+56">🇨🇱 +56</option>
-                    {/* more options to come */}
                   </select>
 
-                  {/* Phone number input */}
+                  {/* Input del número */}
                   <Input
                     id="phoneNumber"
                     type="tel"
@@ -117,7 +111,7 @@ function IntakeForm() {
               </div>
 
               <div>
-                <Label htmlFor="age">Age</Label>
+                <Label htmlFor="age">{t("reg.form.age")}</Label>
                 <Input
                   id="age"
                   type="number"
@@ -132,7 +126,7 @@ function IntakeForm() {
 
               <div>
                 <Label htmlFor="feelings">
-                  How do you feel lately — feel free to tell me anything
+                  {t("reg.form.feelings")}
                 </Label>
                 <Textarea
                   id="feelings"
@@ -144,7 +138,7 @@ function IntakeForm() {
               </div>
               
               <div>
-                <Label>Have you ever had sessions before?</Label>
+                <Label>{t("reg.form.priorSess")}</Label>
                 <div className="mt-2 flex gap-3">
                   {["yes", "no"].map((v) => (
                     <label
@@ -171,7 +165,7 @@ function IntakeForm() {
               </div>
               
               <div>
-                <Label>How'd you like to be contacted?</Label>
+                <Label>{t("reg.form.contact")}</Label>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {[
                     { v: "whatsapp", l: "WhatsApp" },
@@ -202,20 +196,20 @@ function IntakeForm() {
               
               <div className="pt-4">
                 <p className="mb-4 text-sm italic text-foreground/70">
-                  This is a big step, thanks for trusting me, see you soon 💜
+                  {t("reg.form.thanks")}
                 </p>
                 <Button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full rounded-full bg-primary py-6 text-lg text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                 >
-                  {isSubmitting ? "Sending..." : "Submit Application"}
+                  {isSubmitting ? "Sending..." : t("reg.form.submit")}
                 </Button>
               </div>
             </form>
 
             <p className="mt-8 text-center text-sm text-foreground/60">
-              Already have an account?{" "}
+              {t("reg.form.alreadyAccount")}{" "}
               <Link to="/login" className="font-medium text-primary hover:underline">
                 Log in here
               </Link>
@@ -233,7 +227,7 @@ function IntakeForm() {
               Formulario Enviado
             </h2>
             <p className="mx-auto max-w-md text-foreground/70">
-              Gracias por dar este paso, <strong>{intake.preferredName}</strong>. Hemos recibido tu información correctamente. Mariale revisará tus respuestas y te contactaremos vía <strong>{intake.contactMethod}</strong> pronto para darte acceso a la plataforma.
+              Gracias por dar este paso, <strong>{intake.preferredName}</strong>. Hemos recibido tu información. Mariale revisará tus respuestas y te contactaremos vía <strong>{intake.contactMethod}</strong> pronto para comenzar con tus sesiones.
             </p>
             <div className="mt-8">
               <Link to="/">
