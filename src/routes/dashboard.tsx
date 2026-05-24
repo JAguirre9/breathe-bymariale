@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
-import { getIntakeFn, submitIntakeFn } from "@/lib/db.functions";
 
 const PROFESSIONALS = [
   { id: "mariale", name: "Mariale Marulanda", role: "Founder & Specialist" },
@@ -39,21 +38,8 @@ function Dashboard() {
 
   const [evTitle, setEvTitle] = useState("");
   const [evTime, setEvTime] = useState("09:00");
-
   const [mood, setMood] = useState(3);
   const [noteText, setNoteText] = useState("");
-
-  // Intake form state
-  const [intakeChecked, setIntakeChecked] = useState(false);
-  const [intakeDone, setIntakeDone] = useState(false);
-  const [intake, setIntake] = useState({
-    preferredName: "",
-    age: "",
-    feelings: "",
-    priorSessions: "no",
-    contactMethod: "whatsapp",
-  });
-  const [intakeSubmitting, setIntakeSubmitting] = useState(false);
 
   // Guard + load
   useEffect(() => {
@@ -63,48 +49,19 @@ function Dashboard() {
       return;
     }
     const u = JSON.parse(raw);
-    const uid = String(u.id);
-    setUserId(uid);
+    setUserId(String(u.id));
     setUserName(u.name || u.email || "");
+    
     const evRaw = localStorage.getItem(`breathe.events.${u.id}`);
     const ntRaw = localStorage.getItem(`breathe.notes.${u.id}`);
     if (evRaw) setEvents(JSON.parse(evRaw));
     if (ntRaw) setNotes(JSON.parse(ntRaw));
-
-    (getIntakeFn as any)({ data: { userId: uid } })
-      .then((r: any) => {
-        setIntakeDone(!!r?.exists);
-        setIntakeChecked(true);
-      })
-      .catch(() => setIntakeChecked(true));
   }, [router]);
-
-  const submitIntake = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!userId) return;
-    setIntakeSubmitting(true);
-    try {
-      const res = await (submitIntakeFn as any)({
-        data: {
-          userId,
-          professional: PROFESSIONALS[0].name,
-          preferredName: intake.preferredName.trim(),
-          age: Number(intake.age),
-          feelings: intake.feelings.trim(),
-          priorSessions: intake.priorSessions,
-          contactMethod: intake.contactMethod,
-        },
-      });
-      if (res?.success) setIntakeDone(true);
-      else alert(res?.errorMessage || "Could not submit. Try again.");
-    } finally {
-      setIntakeSubmitting(false);
-    }
-  };
 
   useEffect(() => {
     if (userId) localStorage.setItem(`breathe.events.${userId}`, JSON.stringify(events));
   }, [events, userId]);
+
   useEffect(() => {
     if (userId) localStorage.setItem(`breathe.notes.${userId}`, JSON.stringify(notes));
   }, [notes, userId]);
@@ -132,6 +89,7 @@ function Dashboard() {
     ]);
     setEvTitle("");
   };
+
   const removeEvent = (id: string) => setEvents((p) => p.filter((e) => e.id !== id));
 
   const addNote = (e: React.FormEvent) => {
@@ -144,6 +102,7 @@ function Dashboard() {
     setNoteText("");
     setMood(3);
   };
+
   const removeNote = (id: string) => setNotes((p) => p.filter((n) => n.id !== id));
 
   const logout = () => {
@@ -196,10 +155,7 @@ function Dashboard() {
               <p className="mb-2 text-xs uppercase tracking-wide text-foreground/50">Specialists</p>
               <ul className="space-y-2">
                 {PROFESSIONALS.map((p) => (
-                  <li
-                    key={p.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
-                  >
+                  <li key={p.id} className="flex items-center gap-3 rounded-2xl border border-border/50 bg-background/50 px-4 py-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
                       {p.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
                     </div>
@@ -212,20 +168,9 @@ function Dashboard() {
               </ul>
             </div>
 
-
             <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-              <Input
-                placeholder={t("dash.sessions.placeholder")}
-                value={evTitle}
-                onChange={(e) => setEvTitle(e.target.value)}
-                className="rounded-xl"
-              />
-              <Input
-                type="time"
-                value={evTime}
-                onChange={(e) => setEvTime(e.target.value)}
-                className="rounded-xl sm:w-32"
-              />
+              <Input placeholder={t("dash.sessions.placeholder")} value={evTitle} onChange={(e) => setEvTitle(e.target.value)} className="rounded-xl" />
+              <Input type="time" value={evTime} onChange={(e) => setEvTime(e.target.value)} className="rounded-xl sm:w-32" />
               <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
                 {t("dash.add")}
               </Button>
@@ -236,29 +181,19 @@ function Dashboard() {
             ) : (
               <ul className="space-y-2">
                 {dayEvents.map((e) => (
-                  <li
-                    key={e.id}
-                    className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
-                  >
+                  <li key={e.id} className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/50 px-4 py-3">
                     <div className="flex items-center gap-4">
                       <span className="font-mono text-sm font-semibold text-primary">{e.time}</span>
                       <span className="text-foreground">{e.title}</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeEvent(e.id)}
-                      className="text-foreground/50 hover:text-destructive"
-                    >
-                      ×
-                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => removeEvent(e.id)} className="text-foreground/50 hover:text-destructive">×</Button>
                   </li>
                 ))}
               </ul>
             )}
           </section>
 
-          {/* Notes / mood */}
+          {/* Notes / Mood */}
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-3">
             <h2 className="mb-1 font-display text-xl font-semibold">{t("dash.notes")}</h2>
             <p className="mb-5 text-sm text-foreground/60">{t("dash.notes.sub")}</p>
@@ -268,35 +203,17 @@ function Dashboard() {
                 <Label className="text-sm">{t("dash.mood")}</Label>
                 <div className="mt-2 flex gap-2">
                   {MOODS.map((m, i) => (
-                    <button
-                      type="button"
-                      key={i}
-                      onClick={() => setMood(i + 1)}
-                      className={`h-12 w-12 rounded-full text-2xl transition ${
-                        mood === i + 1 ? "scale-110 bg-primary/20 ring-2 ring-primary" : "bg-background/60 hover:bg-background"
-                      }`}
-                      aria-label={`mood ${i + 1}`}
-                    >
+                    <button type="button" key={i} onClick={() => setMood(i + 1)} className={`h-12 w-12 rounded-full text-2xl transition ${mood === i + 1 ? "scale-110 bg-primary/20 ring-2 ring-primary" : "bg-background/60 hover:bg-background"}`}>
                       {m}
                     </button>
                   ))}
                 </div>
               </div>
               <div>
-                <Label htmlFor="note" className="text-sm">
-                  {t("dash.note.label")}
-                </Label>
-                <Textarea
-                  id="note"
-                  value={noteText}
-                  onChange={(e) => setNoteText(e.target.value)}
-                  placeholder={t("dash.note.placeholder")}
-                  className="mt-1.5 min-h-28 rounded-xl"
-                />
+                <Label htmlFor="note" className="text-sm">{t("dash.note.label")}</Label>
+                <Textarea id="note" value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder={t("dash.note.placeholder")} className="mt-1.5 min-h-28 rounded-xl" />
               </div>
-              <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                {t("dash.save")}
-              </Button>
+              <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">{t("dash.save")}</Button>
             </form>
 
             {dayNotes.length === 0 ? (
@@ -308,21 +225,9 @@ function Dashboard() {
                     <div className="mb-2 flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <span className="text-2xl">{MOODS[n.mood - 1]}</span>
-                        <span className="text-xs text-foreground/50">
-                          {new Date(n.createdAt).toLocaleTimeString(lang === "es" ? "es-ES" : "en-US", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                        </span>
+                        <span className="text-xs text-foreground/50">{new Date(n.createdAt).toLocaleTimeString(lang === "es" ? "es-ES" : "en-US", { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeNote(n.id)}
-                        className="text-foreground/50 hover:text-destructive"
-                      >
-                        ×
-                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => removeNote(n.id)} className="text-foreground/50 hover:text-destructive">×</Button>
                     </div>
                     <p className="whitespace-pre-wrap text-sm text-foreground/80">{n.text}</p>
                   </li>
