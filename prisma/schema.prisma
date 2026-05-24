@@ -13,3 +13,11 @@ model Proyecto {
   descripcion String?
   creadoEn    DateTime @default(now())
 }
+
+model Usuario {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String   // Aquí guardaremos la contraseña encriptada
+  nombre    String?
+  creadoEn  DateTime @default(now())
+}

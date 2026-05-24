@@ -105,6 +105,13 @@ const dict: Dict = {
   "auth.new": { en: "New here?", es: "¿Eres nuevo aquí?" },
   "auth.create.link": { en: "Create an account", es: "Crear una cuenta" },
   "auth.have": { en: "Already with us?", es: "¿Ya tienes cuenta?" },
+
+  //Errors in Signup 
+
+  "auth.error.emailExists":{en : "This email is already registered.", es : "El correo electrónico ya está registrado."},
+  "auth.error.invalidCredentials":{en : "Invalid email or password.", es : "Correo o contraseña incorrectos."},
+  "auth.error.generic": {en : "A server error occurred. Please try again.", es : "Hubo un error en el servidor. Inténtalo de nuevo."},
+  "auth.signup.success": {en : "Account registered successfully!", es : "¡Cuenta registrada con éxito!"},
 };
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: keyof typeof dict) => string };
