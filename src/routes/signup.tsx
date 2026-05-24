@@ -1,108 +1,250 @@
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useT } from "@/lib/i18n";
+import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
-import { signUpUserFn } from "../lib/db.functions"; 
+// Importa aquí tu función de base de datos para guardar el formulario
+// import { saveIntakeFormFn } from "../lib/db.functions"; 
 
 export const Route = createFileRoute("/signup")({
-  head: () => ({ meta: [{ title: "Sign up — Breathe" }] }),
-  component: Signup,
+  head: () => ({ meta: [{ title: "Before we begin - Breathe" }] }),
+  component: IntakeForm,
 });
 
-function Signup() {
-  const { t } = useT();
-  const router = useRouter();
+function IntakeForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  // El estado de tu formulario con todas las variables necesarias
+  const [intake, setIntake] = useState({
+    preferredName: "",
+    age: "",
+    feelings: "",
+    priorSessions: "",
+    contactMethod: "whatsapp",
+    phoneCode: "+57",
+    phoneNumber: "", 
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsSubmitting(true);
 
     try {
-      const result = await (signUpUserFn as any)({ data: { name, email, password } });
-
-      if (result.success) {
-        alert(t("auth.signup.success") || "Account registered successfully!");
-        router.navigate({ to: "/login" });
-      } else {
-        if (result.errorCode === "EMAIL_ALREADY_EXISTS") {
-          alert(t("auth.error.emailExists") || "This email is already registered.");
-        } else {
-          alert(result.errorMessage || t("auth.error.generic") || "An error occurred during registration.");
-        }
-      }
+      // Unimos el código de país con el número para guardarlo completo
+      const fullPhoneNumber = `${intake.phoneCode} ${intake.phoneNumber}`;
+      
+      console.log("Datos enviados para evaluación:", {
+        ...intake,
+        fullPhone: fullPhoneNumber
+      });
+      
+      // Aquí enviarías los datos a tu backend
+      // await saveIntakeFormFn({ data: { ...intake, fullPhone: fullPhoneNumber } });
+      
+      // Simulamos el tiempo de petición al servidor
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      
+      // Mostramos la pantalla de éxito
+      setIsSuccess(true);
+      
     } catch (error: any) {
       console.error(error);
-      alert(`Connection Error: ${error.message || String(error)}`);
+      alert(`Error al enviar el formulario: ${error.message || String(error)}`);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
-      <main className="mx-auto flex max-w-md flex-col px-6 pt-40 pb-24">
-        <div className="rounded-3xl bg-card p-10 shadow-[var(--shadow-card)]">
-          <h1 className="font-display text-3xl font-semibold text-foreground">{t("auth.create")}</h1>
-          <p className="mt-2 text-sm text-foreground/60">{t("auth.create.sub")}</p>
-
-          <form onSubmit={handleSubmit} className="mt-8 space-y-4">
-            <div>
-              <Label htmlFor="name">{t("auth.name")}</Label>
-              <Input 
-                id="name" 
-                className="mt-1.5 rounded-xl" 
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="email">{t("auth.email")}</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                required
-                className="mt-1.5 rounded-xl" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <Label htmlFor="password">{t("auth.password")}</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required
-                className="mt-1.5 rounded-xl" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+      <main className="mx-auto flex max-w-2xl flex-col px-6 pt-40 pb-24">
+        
+        {!isSuccess ? (
+          /* Formulario de Evaluación (Intake) */
+          <section className="rounded-3xl bg-card p-8 shadow-[var(--shadow-card)]">
+            <h2 className="mb-1 font-display text-2xl font-semibold text-foreground">
+              Before we begin
+            </h2>
+            <p className="mb-8 text-sm text-foreground/60">
+              A few questions so Mariale can hold space for you. Once submitted, we will review your answers and contact you to grant access.
+            </p>
             
-            <Button 
-              type="submit"
-              disabled={loading}
-              className="mt-2 w-full rounded-full bg-primary py-6 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
-            >
-              {loading ? "Registering..." : t("auth.signup")}
-            </Button>
-          </form>
-          
-          <p className="mt-6 text-center text-sm text-foreground/60">
-            {t("auth.have")}{" "}
-            <Link to="/login" className="font-medium text-primary">
-              {t("auth.login")}
-            </Link>
-          </p>
-        </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <Label htmlFor="pname">How'd you like to be called?</Label>
+                <Input
+                  id="pname"
+                  required
+                  value={intake.preferredName}
+                  onChange={(e) => setIntake({ ...intake, preferredName: e.target.value })}
+                  className="mt-1.5 rounded-xl"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="phoneNumber">Phone Number</Label>
+                <div className="mt-1.5 flex gap-2">
+                  {/* country selector */}
+                  <select
+                    value={intake.phoneCode}
+                    onChange={(e) => setIntake({ ...intake, phoneCode: e.target.value })}
+                    className="flex h-10 w-28 items-center justify-between rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                  >
+                    <option value="+57">🇨🇴 +57</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+34">🇪🇸 +34</option>
+                    <option value="+52">🇲🇽 +52</option>
+                    <option value="+54">🇦🇷 +54</option>
+                    <option value="+56">🇨🇱 +56</option>
+                    {/* more options to come */}
+                  </select>
+
+                  {/* Phone number input */}
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    placeholder="300 123 4567"
+                    required
+                    value={intake.phoneNumber}
+                    onChange={(e) => setIntake({ ...intake, phoneNumber: e.target.value })}
+                    className="flex-1 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="age">Age</Label>
+                <Input
+                  id="age"
+                  type="number"
+                  min={1}
+                  max={120}
+                  required
+                  value={intake.age}
+                  onChange={(e) => setIntake({ ...intake, age: e.target.value })}
+                  className="mt-1.5 rounded-xl sm:w-32"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="feelings">
+                  How do you feel lately — feel free to tell me anything
+                </Label>
+                <Textarea
+                  id="feelings"
+                  required
+                  value={intake.feelings}
+                  onChange={(e) => setIntake({ ...intake, feelings: e.target.value })}
+                  className="mt-1.5 min-h-28 rounded-xl"
+                />
+              </div>
+              
+              <div>
+                <Label>Have you ever had sessions before?</Label>
+                <div className="mt-2 flex gap-3">
+                  {["yes", "no"].map((v) => (
+                    <label
+                      key={v}
+                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm capitalize transition ${
+                        intake.priorSessions === v
+                          ? "border-primary bg-primary/15 text-primary font-medium"
+                          : "border-border/60 bg-background/50 text-foreground/70 hover:bg-background/80"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="prior"
+                        value={v}
+                        className="sr-only"
+                        checked={intake.priorSessions === v}
+                        onChange={() => setIntake({ ...intake, priorSessions: v })}
+                        required
+                      />
+                      {v}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <Label>How'd you like to be contacted?</Label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {[
+                    { v: "whatsapp", l: "WhatsApp" },
+                    { v: "email", l: "Email" },
+                    { v: "phone", l: "Phone call" },
+                  ].map((o) => (
+                    <label
+                      key={o.v}
+                      className={`cursor-pointer rounded-full border px-4 py-2 text-sm transition ${
+                        intake.contactMethod === o.v
+                          ? "border-primary bg-primary/15 text-primary font-medium"
+                          : "border-border/60 bg-background/50 text-foreground/70 hover:bg-background/80"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="contact"
+                        value={o.v}
+                        className="sr-only"
+                        checked={intake.contactMethod === o.v}
+                        onChange={() => setIntake({ ...intake, contactMethod: o.v })}
+                      />
+                      {o.l}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="pt-4">
+                <p className="mb-4 text-sm italic text-foreground/70">
+                  This is a big step, thanks for trusting me, see you soon 💜
+                </p>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full rounded-full bg-primary py-6 text-lg text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {isSubmitting ? "Sending..." : "Submit Application"}
+                </Button>
+              </div>
+            </form>
+
+            <p className="mt-8 text-center text-sm text-foreground/60">
+              Already have an account?{" "}
+              <Link to="/login" className="font-medium text-primary hover:underline">
+                Log in here
+              </Link>
+            </p>
+          </section>
+        ) : (
+          /* Pantalla de Éxito */
+          <section className="rounded-3xl bg-card p-12 text-center shadow-[var(--shadow-card)]">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="mb-4 font-display text-3xl font-semibold text-foreground">
+              Formulario Enviado
+            </h2>
+            <p className="mx-auto max-w-md text-foreground/70">
+              Gracias por dar este paso, <strong>{intake.preferredName}</strong>. Hemos recibido tu información correctamente. Mariale revisará tus respuestas y te contactaremos vía <strong>{intake.contactMethod}</strong> pronto para darte acceso a la plataforma.
+            </p>
+            <div className="mt-8">
+              <Link to="/">
+                <Button variant="outline" className="rounded-full px-8">
+                  Volver al inicio
+                </Button>
+              </Link>
+            </div>
+          </section>
+        )}
+
       </main>
     </div>
   );

@@ -6,7 +6,7 @@ import { useT } from "@/lib/i18n";
 export const Route = createFileRoute("/start")({
   head: () => ({
     meta: [
-      { title: "Start your therapy — Breathe" },
+      { title: "Start your therapy - Breathe" },
       { name: "description", content: "Begin your therapy journey in two minutes." },
     ],
   }),

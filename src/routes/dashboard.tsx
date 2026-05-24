@@ -14,7 +14,7 @@ const PROFESSIONALS = [
 ];
 
 export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — Breathe" }] }),
+  head: () => ({ meta: [{ title: "Dashboard - Breathe" }] }),
   component: Dashboard,
 });
 

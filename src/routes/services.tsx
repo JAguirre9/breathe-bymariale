@@ -5,7 +5,7 @@ import { useT } from "@/lib/i18n";
 export const Route = createFileRoute("/services")({
   head: () => ({
     meta: [
-      { title: "Services — Breathe" },
+      { title: "Services - Breathe" },
       { name: "description", content: "Therapy services tailored to your pace and needs." },
     ],
   }),

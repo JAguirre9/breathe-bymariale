@@ -8,7 +8,7 @@ import { useState } from "react";
 import { logInUserFn } from "../lib/db.functions";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Log in — Breathe" }] }),
+  head: () => ({ meta: [{ title: "Log in - Breathe" }] }),
   component: Login,
 });
 
