@@ -93,6 +93,15 @@ function Login() {
             >
               {loading ? "Logging in..." : t("auth.login")}
             </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={useMockUser}
+              className="w-full rounded-full"
+            >
+              Use mock user (dev)
+            </Button>
           </form>
           
           <p className="mt-6 text-center text-sm text-foreground/60">
