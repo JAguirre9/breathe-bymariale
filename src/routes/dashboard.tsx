@@ -192,6 +192,27 @@ function Dashboard() {
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-2">
             <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.sessions")}</h2>
 
+            <div className="mb-6">
+              <p className="mb-2 text-xs uppercase tracking-wide text-foreground/50">Specialists</p>
+              <ul className="space-y-2">
+                {PROFESSIONALS.map((p) => (
+                  <li
+                    key={p.id}
+                    className="flex items-center gap-3 rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+                      {p.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{p.name}</p>
+                      <p className="text-xs text-foreground/60">{p.role}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+
             <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
               <Input
                 placeholder={t("dash.sessions.placeholder")}
