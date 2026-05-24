@@ -47,6 +47,13 @@ function Login() {
     }
   };
 
+  const useMockUser = () => {
+    if (typeof window === "undefined") return;
+    const mock = { id: "mock-user-1", name: "Test Consultant", email: "test@breathe.local" };
+    localStorage.setItem("breathe.user", JSON.stringify(mock));
+    router.navigate({ to: "/dashboard" });
+  };
+
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
