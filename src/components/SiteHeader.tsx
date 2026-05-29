@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import logo from "@/assets/breathe-logo.png";
 import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useT } from "@/lib/i18n";
 
 export function SiteHeader() {
@@ -36,6 +37,7 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <LanguageToggle />
           <Button asChild variant="ghost" className="rounded-full text-foreground hover:bg-accent">
             <Link to="/login">{t("nav.login")}</Link>
           </Button>
