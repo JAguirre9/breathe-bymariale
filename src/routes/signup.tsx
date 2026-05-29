@@ -35,7 +35,7 @@ function IntakeForm() {
     const user = rawUser ? JSON.parse(rawUser) : null;
 
     if (!user || !user.id) {
-      alert("No se pudo identificar al usuario. Por favor, inicia sesión de nuevo.");
+      alert("Could not identify user. Please log in again.");
       setIsSubmitting(false);
       return;
     }
@@ -56,11 +56,11 @@ function IntakeForm() {
       if (result.success) {
         setIsSuccess(true);
       } else {
-        alert("Error: " + (result.errorMessage || "No se pudo guardar"));
+        alert("Error: " + (result.errorMessage || "Could not save"));
       }
     } catch (error: any) {
       console.error(error);
-      alert(`Error al enviar: ${error.message}`);
+      alert(`Submission error: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -168,7 +168,7 @@ function IntakeForm() {
               <div className="pt-4">
                 <p className="mb-4 text-sm italic text-foreground/70">{t("reg.form.thanks")}</p>
                 <Button type="submit" disabled={isSubmitting} className="w-full rounded-full py-6 text-lg">
-                  {isSubmitting ? "Sending..." : t("reg.form.submit")}
+                  {isSubmitting ? "Submitting..." : t("reg.form.submit")}
                 </Button>
               </div>
             </form>
@@ -180,8 +180,8 @@ function IntakeForm() {
           </section>
         ) : (
           <section className="rounded-3xl bg-card p-12 text-center shadow-[var(--shadow-card)]">
-            <h2 className="mb-4 font-display text-3xl font-semibold">Formulario Enviado</h2>
-            <Link to="/"><Button variant="outline" className="rounded-full">Volver al inicio</Button></Link>
+            <h2 className="mb-4 font-display text-3xl font-semibold">Form Submitted</h2>
+            <Link to="/"><Button variant="outline" className="rounded-full">Back to home</Button></Link>
           </section>
         )}
       </main>
