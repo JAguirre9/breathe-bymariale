@@ -27,7 +27,7 @@ function fmtKey(d: Date) {
 }
 
 function Dashboard() {
-  const { t, lang } = useT();
+  const { t } = useT();
   const router = useRouter();
 
   const [userId, setUserId] = useState<string | null>(null);
