@@ -73,18 +73,14 @@ export const submitIntakeFn = createServerFn({ method: "POST" })
     const d = ctx.data;
     try {
       await sql`
-        INSERT INTO "IntakeApplication" ("userId", "professional", "preferredName", "age", "feelings", "priorSessions", "contactMethod")
-        VALUES (${d.userId}, 'Mariale', ${d.preferredName}, ${Number(d.age)}, ${d.feelings}, ${d.priorSessions}, ${d.contactMethod})
-        ON CONFLICT ("userId")
-        DO UPDATE SET
-          "preferredName" = EXCLUDED."preferredName",
-          "age" = EXCLUDED."age",
-          "feelings" = EXCLUDED."feelings",
-          "priorSessions" = EXCLUDED."priorSessions",
-          "contactMethod" = EXCLUDED."contactMethod";
+        INSERT INTO "IntakeApplication" 
+          ("userId", "professional", "preferredName", "age", "feelings", "priorSessions", "contactMethod")
+        VALUES 
+          (${d.userId}, 'Mariale', ${d.preferredName}, ${Number(d.age)}, ${d.feelings}, ${d.priorSessions}, ${d.contactMethod})
       `;
       return { success: true };
     } catch (e: any) {
-      return { success: false, errorMessage: e.message };
+      console.error(e);
+      return { success: false, errorMessage: "Failed to save intake" };
     }
   });
