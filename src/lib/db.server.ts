@@ -30,6 +30,10 @@ export const sql = _sql as unknown as (
   ...values: any[]
 ) => Promise<any[]>;
 
+if (!globalThis.__neonSql) {
+  globalThis.__neonSql = _sql;
+}
+
 // Fire-and-forget idempotent perf indexes; runs once per isolate.
 if (!globalThis.__neonSchemaReady) {
   globalThis.__neonSchemaReady = true;
