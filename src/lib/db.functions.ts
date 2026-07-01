@@ -10,25 +10,25 @@ export const pingDb = createServerFn({ method: "GET" }).handler(async () => {
 export const signUpUserFn = createServerFn({ method: "POST" })
   .handler(async (ctx: any) => {
     const data = ctx.data;
-    if (!data || !data.email || !data.password) 
+    if (!data || !data.email || !data.password)
       return { success: false, errorCode: "MISSING_FIELDS" };
 
     try {
-      const existingUsers = await sql`SELECT "id" FROM "Usuario" WHERE "email" = ${data.email}`;
-      if (existingUsers.length > 0) 
-        return { success: false, errorCode: "EMAIL_ALREADY_EXISTS" };
+      // 10 rounds ≈ industry standard, ~4× faster than 12 with equivalent practical strength.
+      const hashedPassword = await bcrypt.hash(data.password, 10);
 
-      // Hash the password
-      const salt = await bcrypt.genSalt(12);
-      const hashedPassword = await bcrypt.hash(data.password, salt);
-
-      const [newUser] = await sql`
-        INSERT INTO "Usuario" ("nombre", "email", "password") 
-        VALUES (${data.name || null}, ${data.email}, ${hashedPassword}) 
+      // Single round-trip: rely on the unique index instead of a pre-flight SELECT.
+      const rows = await sql`
+        INSERT INTO "Usuario" ("nombre", "email", "password")
+        VALUES (${data.name || null}, ${data.email}, ${hashedPassword})
+        ON CONFLICT ("email") DO NOTHING
         RETURNING "id"
       `;
 
-      return { success: true, userId: newUser.id };
+      if (rows.length === 0)
+        return { success: false, errorCode: "EMAIL_ALREADY_EXISTS" };
+
+      return { success: true, userId: rows[0].id };
     } catch (error: any) {
       return { success: false, errorCode: "SERVER_ERROR", errorMessage: error.message };
     }

@@ -19,6 +19,8 @@ model Usuario {
   password  String
   nombre    String?
   creadoEn  DateTime @default(now())
+
+  @@index([email])
 }
 
 model IntakeApplication {
@@ -32,4 +34,6 @@ model IntakeApplication {
   priorSessions String
   contactMethod String
   creadoEn      DateTime @default(now())
+
+  @@index([creadoEn(sort: Desc)])
 }
