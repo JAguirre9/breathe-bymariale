@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useT } from "@/lib/i18n";
-import { submitIntakeFn } from "@/lib/db.functions";
 export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Before we begin - Breathe" }] }),
   component: IntakeForm,
@@ -24,46 +23,16 @@ function IntakeForm() {
     priorSessions: "",
     contactMethod: "whatsapp",
     phoneCode: "+57",
-    phoneNumber: "", 
+    phoneNumber: "",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-
-    const rawUser = localStorage.getItem("breathe.user");
-    const user = rawUser ? JSON.parse(rawUser) : null;
-
-    if (!user || !user.id) {
-      alert("Could not identify user. Please log in again.");
+    setTimeout(() => {
+      setIsSuccess(true);
       setIsSubmitting(false);
-      return;
-    }
-
-    try {
-      const payload = {
-        userId: String(user.id),
-        preferredName: intake.preferredName,
-        age: Number(intake.age),
-        feelings: intake.feelings,
-        priorSessions: intake.priorSessions,
-        contactMethod: intake.contactMethod,
-        phone: `${intake.phoneCode} ${intake.phoneNumber}`
-      };
-
-      const result = await submitIntakeFn({ data: payload as any });
-      
-      if (result.success) {
-        setIsSuccess(true);
-      } else {
-        alert("Error: " + (result.errorMessage || "Could not save"));
-      }
-    } catch (error: any) {
-      console.error(error);
-      alert(`Submission error: ${error.message}`);
-    } finally {
-      setIsSubmitting(false);
-    }
+    }, 300);
   };
 
   return (
