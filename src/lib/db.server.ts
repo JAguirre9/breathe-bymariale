@@ -1,18 +1,44 @@
-import postgres from "postgres";
+import { neon, neonConfig } from "@neondatabase/serverless";
+
+// Cache HTTP connections at the isolate level for lower per-request latency.
+neonConfig.fetchConnectionCache = true;
 
 declare global {
   // eslint-disable-next-line no-var
-  var __neonSql: ReturnType<typeof postgres> | undefined;
+  var __neonSql: ReturnType<typeof neon> | undefined;
+  // eslint-disable-next-line no-var
+  var __neonSchemaReady: boolean | undefined;
 }
 
-let connectionString = import.meta.env.DATABASE_URL || process.env.DATABASE_URL;
+const connectionString =
+  process.env.DATABASE_URL ||
+  (import.meta as any).env?.DATABASE_URL ||
+  "";
 
 if (!connectionString) {
-  connectionString = "postgresql://tu_usuario:tu_password@un-host-de-neon.postgres.neon.tech/neondb?sslmode=require";
+  throw new Error("DATABASE_URL is not set");
 }
 
-export const sql = globalThis.__neonSql ?? postgres(connectionString, { ssl: "require" });
+// Neon's HTTP driver: no TCP handshake per cold start, ideal for edge/Worker runtimes.
+// The tagged-template API is call-compatible with the previous `postgres` client.
+export const sql =
+  globalThis.__neonSql ?? neon(connectionString, { fullResults: false });
 
-if (process.env.NODE_ENV !== "production") {
+if (!globalThis.__neonSql) {
   globalThis.__neonSql = sql;
+}
+
+// Fire-and-forget idempotent perf indexes; runs once per isolate.
+if (!globalThis.__neonSchemaReady) {
+  globalThis.__neonSchemaReady = true;
+  (async () => {
+    try {
+      await sql`CREATE UNIQUE INDEX IF NOT EXISTS "Usuario_email_key" ON "Usuario" ("email")`;
+      await sql`CREATE INDEX IF NOT EXISTS "IntakeApplication_userId_idx" ON "IntakeApplication" ("userId")`;
+      await sql`CREATE INDEX IF NOT EXISTS "IntakeApplication_creadoEn_idx" ON "IntakeApplication" ("creadoEn" DESC)`;
+    } catch (e) {
+      // Non-fatal: columns may not exist yet in some environments.
+      console.warn("[db] index bootstrap skipped:", (e as Error).message);
+    }
+  })();
 }
