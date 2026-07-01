@@ -21,12 +21,14 @@ if (!connectionString) {
 
 // Neon's HTTP driver: no TCP handshake per cold start, ideal for edge/Worker runtimes.
 // The tagged-template API is call-compatible with the previous `postgres` client.
-export const sql =
+const _sql =
   globalThis.__neonSql ?? neon(connectionString, { fullResults: false });
 
-if (!globalThis.__neonSql) {
-  globalThis.__neonSql = sql;
-}
+// Cast to a tagged-template returning `any[]` so call sites keep their prior shape.
+export const sql = _sql as unknown as (
+  strings: TemplateStringsArray,
+  ...values: any[]
+) => Promise<any[]>;
 
 // Fire-and-forget idempotent perf indexes; runs once per isolate.
 if (!globalThis.__neonSchemaReady) {
