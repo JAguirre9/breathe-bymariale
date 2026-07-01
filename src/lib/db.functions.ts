@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { sql } from "./db.server";
+import bcrypt from "bcryptjs";
 
 export const pingDb = createServerFn({ method: "GET" }).handler(async () => {
   const rows = await sql`select now() as now`;
@@ -9,11 +10,24 @@ export const pingDb = createServerFn({ method: "GET" }).handler(async () => {
 export const signUpUserFn = createServerFn({ method: "POST" })
   .handler(async (ctx: any) => {
     const data = ctx.data;
-    if (!data || !data.email || !data.password) return { success: false, errorCode: "MISSING_FIELDS" };
+    if (!data || !data.email || !data.password) 
+      return { success: false, errorCode: "MISSING_FIELDS" };
+
     try {
       const existingUsers = await sql`SELECT "id" FROM "Usuario" WHERE "email" = ${data.email}`;
-      if (existingUsers.length > 0) return { success: false, errorCode: "EMAIL_ALREADY_EXISTS" };
-      const [newUser] = await sql`INSERT INTO "Usuario" ("nombre", "email", "password") VALUES (${data.name || null}, ${data.email}, ${data.password}) RETURNING "id"`;
+      if (existingUsers.length > 0) 
+        return { success: false, errorCode: "EMAIL_ALREADY_EXISTS" };
+
+      // Hash the password
+      const salt = await bcrypt.genSalt(12);
+      const hashedPassword = await bcrypt.hash(data.password, salt);
+
+      const [newUser] = await sql`
+        INSERT INTO "Usuario" ("nombre", "email", "password") 
+        VALUES (${data.name || null}, ${data.email}, ${hashedPassword}) 
+        RETURNING "id"
+      `;
+
       return { success: true, userId: newUser.id };
     } catch (error: any) {
       return { success: false, errorCode: "SERVER_ERROR", errorMessage: error.message };
@@ -23,11 +37,32 @@ export const signUpUserFn = createServerFn({ method: "POST" })
 export const logInUserFn = createServerFn({ method: "POST" })
   .handler(async (ctx: any) => {
     const data = ctx.data;
-    if (!data || !data.email || !data.password) return { success: false, errorCode: "MISSING_FIELDS" };
+    if (!data || !data.email || !data.password) 
+      return { success: false, errorCode: "MISSING_FIELDS" };
+
     try {
-      const [user] = await sql`SELECT "id", "nombre", "email", "password" FROM "Usuario" WHERE "email" = ${data.email}`;
-      if (!user || user.password !== data.password) return { success: false, errorCode: "INVALID_CREDENTIALS" };
-      return { success: true, user: { id: user.id, name: user.nombre, email: user.email } };
+      const [user] = await sql`
+        SELECT "id", "nombre", "email", "password" 
+        FROM "Usuario" WHERE "email" = ${data.email}
+      `;
+
+      if (!user) 
+        return { success: false, errorCode: "INVALID_CREDENTIALS" };
+
+      // Compare hashed password
+      const isValidPassword = await bcrypt.compare(data.password, user.password);
+      
+      if (!isValidPassword) 
+        return { success: false, errorCode: "INVALID_CREDENTIALS" };
+
+      return { 
+        success: true, 
+        user: { 
+          id: user.id, 
+          name: user.nombre, 
+          email: user.email 
+        } 
+      };
     } catch (error: any) {
       return { success: false, errorCode: "SERVER_ERROR", errorMessage: error.message };
     }
@@ -40,8 +75,8 @@ export const submitIntakeFn = createServerFn({ method: "POST" })
       await sql`
         INSERT INTO "IntakeApplication" ("userId", "professional", "preferredName", "age", "feelings", "priorSessions", "contactMethod")
         VALUES (${d.userId}, 'Mariale', ${d.preferredName}, ${Number(d.age)}, ${d.feelings}, ${d.priorSessions}, ${d.contactMethod})
-        ON CONFLICT ("userId") 
-        DO UPDATE SET 
+        ON CONFLICT ("userId")
+        DO UPDATE SET
           "preferredName" = EXCLUDED."preferredName",
           "age" = EXCLUDED."age",
           "feelings" = EXCLUDED."feelings",
