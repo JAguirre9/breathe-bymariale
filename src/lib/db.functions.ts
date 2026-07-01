@@ -80,7 +80,7 @@ export const submitIntakeFn = createServerFn({ method: "POST" })
       `;
       return { success: true };
     } catch (e: any) {
-      console.error(e);
-      return { success: false, errorMessage: "Failed to save intake" };
+      console.error("Intake Error:", e.message);
+      return { success: false, errorMessage: e.message };
     }
   });
