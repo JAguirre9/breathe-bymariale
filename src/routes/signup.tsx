@@ -16,15 +16,22 @@ function IntakeForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const [intake, setIntake] = useState({
-    preferredName: "",
-    age: "",
-    feelings: "",
-    priorSessions: "",
-    contactMethod: "whatsapp",
-    phoneCode: "+57",
-    phoneNumber: "",
-  });
+const [intake, setIntake] = useState({
+  firstName: "",
+  lastName: "",
+  email: "",
+  password: "",
+  confirmPassword: "",
+  role: "PATIENT",
+
+  preferredName: "",
+  age: "",
+  feelings: "",
+  priorSessions: "",
+  contactMethod: "whatsapp",
+  phoneCode: "+57",
+  phoneNumber: "",
+});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
