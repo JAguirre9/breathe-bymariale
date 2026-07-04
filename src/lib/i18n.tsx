@@ -113,6 +113,7 @@ const dict: Dict = {
   "auth.signup.success": { en: "Account registered successfully!", es: "¡Cuenta registrada con éxito!" },
   "auth.login.success": { en: "Welcome back!", es: "¡Bienvenido de nuevo!" },
 
+
   // Intake form
   "reg.form.begin": { en: "Before we begin", es: "Antes de comenzar" },
   "reg.form.questions": {
@@ -134,6 +135,206 @@ const dict: Dict = {
   },
   "reg.form.submit": { en: "Submit Form", es: "Enviar formulario" },
   "reg.form.alreadyAccount": { en: "Already have an account?", es: "¿Ya tienes una cuenta?" },
+
+"intake.success.title": {
+  en: "Thank you for reaching out",
+  es: "Gracias por comunicarte con nosotros"
+},
+
+"intake.success.subtitle": {
+  en: "We've received your information. Our team will contact you soon to schedule your first session. Once you're accepted as a patient, you'll receive access to your Breathe account.",
+  es: "Hemos recibido tu información. Nuestro equipo se pondrá en contacto contigo para programar tu primera sesión. Una vez seas aceptado como paciente, recibirás acceso a tu cuenta de Breathe."
+},
+
+"intake.psychologist.success.title": {
+  en: "Application received",
+  es: "Solicitud recibida"
+},
+
+"intake.psychologist.success.subtitle": {
+  en: "Thank you for your interest in joining Breathe. We'll review your credentials and contact you soon.",
+  es: "Gracias por tu interés en formar parte de Breathe. Revisaremos tus credenciales y nos pondremos en contacto contigo pronto."
+},
+
+  // Signup V2
+  "signup.title": {
+    en: "Join Breathe",
+    es: "Únete a Breathe",
+  },
+  "signup.subtitle": {
+    en: "Choose how you'd like to begin your journey with us.",
+    es: "Elige cómo te gustaría comenzar tu camino con nosotros.",
+  },
+
+  "signup.chooseRole": {
+    en: "Who are you?",
+    es: "¿Quién eres?",
+  },
+
+  "signup.patient": {
+    en: "I'm looking for therapy",
+    es: "Estoy buscando terapia",
+  },
+
+  "signup.patient.description": {
+    en: "Complete a short intake form so Mariale can understand your needs before scheduling your first session.",
+    es: "Completa un breve formulario para que Mariale pueda conocer tus necesidades antes de agendar tu primera sesión.",
+  },
+
+  "signup.psychologist": {
+    en: "I'm a psychologist",
+    es: "Soy psicólogo(a)",
+  },
+
+  "signup.psychologist.description": {
+    en: "Apply to become part of the Breathe professional network.",
+    es: "Postúlate para formar parte de la red de profesionales de Breathe.",
+  },
+
+  "signup.personalInfo": {
+    en: "Personal Information",
+    es: "Información personal",
+  },
+
+  "signup.professionalInfo": {
+    en: "Professional Information",
+    es: "Información profesional",
+  },
+
+  "signup.firstName": {
+    en: "First Name",
+    es: "Nombre",
+  },
+
+  "signup.lastName": {
+    en: "Last Name",
+    es: "Apellido",
+  },
+
+  "signup.preferredName": {
+    en: "Preferred Name",
+    es: "Nombre preferido",
+  },
+
+  "signup.email": {
+    en: "Email Address",
+    es: "Correo electrónico",
+  },
+
+  "signup.phone": {
+    en: "Phone Number",
+    es: "Número de teléfono",
+  },
+
+  "signup.age": {
+    en: "Age",
+    es: "Edad",
+  },
+
+  "signup.feelings": {
+    en: "Tell us how you've been feeling lately",
+    es: "Cuéntanos cómo te has sentido últimamente",
+  },
+
+  "signup.previousTherapy": {
+    en: "Have you attended therapy before?",
+    es: "¿Has asistido anteriormente a terapia?",
+  },
+
+  "signup.contactMethod": {
+    en: "Preferred Contact Method",
+    es: "Método de contacto preferido",
+  },
+
+  "signup.whatsapp": {
+    en: "WhatsApp",
+    es: "WhatsApp",
+  },
+
+  "signup.emailOption": {
+    en: "Email",
+    es: "Correo electrónico",
+  },
+
+  "signup.phoneOption": {
+    en: "Phone Call",
+    es: "Llamada telefónica",
+  },
+
+  "signup.yes": {
+    en: "Yes",
+    es: "Sí",
+  },
+
+  "signup.no": {
+    en: "No",
+    es: "No",
+  },
+
+  "signup.professionalLicense": {
+    en: "Professional License",
+    es: "Tarjeta profesional",
+  },
+
+  "signup.licenseCountry": {
+    en: "Country of License",
+    es: "País donde fue emitida",
+  },
+
+  "signup.degree": {
+    en: "Highest Degree",
+    es: "Título académico",
+  },
+
+  "signup.yearsExperience": {
+    en: "Years of Experience",
+    es: "Años de experiencia",
+  },
+
+  "signup.specialties": {
+    en: "Areas of Expertise",
+    es: "Áreas de especialización",
+  },
+
+  "signup.languages": {
+    en: "Languages",
+    es: "Idiomas",
+  },
+
+  "signup.biography": {
+    en: "Tell us about yourself",
+    es: "Cuéntanos sobre ti",
+  },
+
+  "signup.submitPatient": {
+    en: "Request my first session",
+    es: "Solicitar mi primera sesión",
+  },
+
+  "signup.submitPsychologist": {
+    en: "Submit Application",
+    es: "Enviar solicitud",
+  },
+
+  "signup.back": {
+    en: "Back",
+    es: "Volver",
+  },
+
+  "signup.success.title": {
+    en: "Thank you 💜",
+    es: "Gracias 💜",
+  },
+
+  "signup.success.message.patient": {
+    en: "We've received your information. Mariale will contact you shortly to schedule your first session.",
+    es: "Hemos recibido tu información. Mariale se pondrá en contacto contigo muy pronto para agendar tu primera sesión.",
+  },
+
+  "signup.success.message.psychologist": {
+    en: "Thank you for applying to Breathe. We'll review your information and contact you soon.",
+    es: "Gracias por postularte a Breathe. Revisaremos tu información y nos pondremos en contacto contigo pronto.",
+  },
 
   // Dashboard
   "dash.welcome": { en: "Welcome back,", es: "Bienvenido de nuevo," },
