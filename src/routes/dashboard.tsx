@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
+import { JournalSection } from "@/components/dashboard/JournalSection";
 
 const PROFESSIONALS = [
   { id: "mariale", name: "Mariale Marulanda", role: "Founder & Specialist" },
@@ -43,11 +44,14 @@ function Dashboard() {
 
   // Guard + load
   useEffect(() => {
-    const raw = typeof window !== "undefined" ? localStorage.getItem("breathe.user") : null;
-    if (!raw) {
-      router.navigate({ to: "/login" });
-      return;
-    }
+
+    if (typeof window === "undefined") return;
+
+    const raw = localStorage.getItem("breathe.user");
+  if (!raw) {
+    router.navigate({ to: "/login" });
+    return;
+  }
     const u = JSON.parse(raw);
     setUserId(String(u.id));
     setUserName(u.name || u.email || "");
@@ -59,12 +63,14 @@ function Dashboard() {
   }, [router]);
 
   useEffect(() => {
-    if (userId) localStorage.setItem(`breathe.events.${userId}`, JSON.stringify(events));
-  }, [events, userId]);
+  if (typeof window === "undefined" || !userId) return;
+  localStorage.setItem(`breathe.events.${userId}`, JSON.stringify(events));
+}, [events, userId]);
 
-  useEffect(() => {
-    if (userId) localStorage.setItem(`breathe.notes.${userId}`, JSON.stringify(notes));
-  }, [notes, userId]);
+useEffect(() => {
+  if (typeof window === "undefined" || !userId) return;
+  localStorage.setItem(`breathe.notes.${userId}`, JSON.stringify(notes));
+}, [notes, userId]);
 
   const selectedKey = fmtKey(date);
   const dayEvents = useMemo(
@@ -194,47 +200,10 @@ function Dashboard() {
           </section>
 
           {/* Notes / Mood */}
-          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-3">
-            <h2 className="mb-1 font-display text-xl font-semibold">{t("dash.notes")}</h2>
-            <p className="mb-5 text-sm text-foreground/60">{t("dash.notes.sub")}</p>
-
-            <form onSubmit={addNote} className="mb-6 space-y-3">
-              <div>
-                <Label className="text-sm">{t("dash.mood")}</Label>
-                <div className="mt-2 flex gap-2">
-                  {MOODS.map((m, i) => (
-                    <button type="button" key={i} onClick={() => setMood(i + 1)} className={`h-12 w-12 rounded-full text-2xl transition ${mood === i + 1 ? "scale-110 bg-primary/20 ring-2 ring-primary" : "bg-background/60 hover:bg-background"}`}>
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <Label htmlFor="note" className="text-sm">{t("dash.note.label")}</Label>
-                <Textarea id="note" value={noteText} onChange={(e) => setNoteText(e.target.value)} placeholder={t("dash.note.placeholder")} className="mt-1.5 min-h-28 rounded-xl" />
-              </div>
-              <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">{t("dash.save")}</Button>
-            </form>
-
-            {dayNotes.length === 0 ? (
-              <p className="text-sm text-foreground/50">{t("dash.notes.empty")}</p>
-            ) : (
-              <ul className="space-y-3">
-                {dayNotes.map((n) => (
-                  <li key={n.id} className="rounded-2xl border border-border/50 bg-background/50 p-4">
-                    <div className="mb-2 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <span className="text-2xl">{MOODS[n.mood - 1]}</span>
-                        <span className="text-xs text-foreground/50">{new Date(n.createdAt).toLocaleTimeString(lang === "es" ? "es-ES" : "en-US", { hour: "2-digit", minute: "2-digit" })}</span>
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => removeNote(n.id)} className="text-foreground/50 hover:text-destructive">×</Button>
-                    </div>
-                    <p className="whitespace-pre-wrap text-sm text-foreground/80">{n.text}</p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+            <JournalSection
+              userId={userId}
+              selectedDate={date}
+            />
         </div>
       </main>
     </div>
