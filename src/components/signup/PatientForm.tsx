@@ -24,7 +24,7 @@ export function PatientForm({
   return (
     <form onSubmit={onSubmit} className="space-y-8">
       {/* PERSONAL INFORMATION */}
-      <section className="rounded-2xl bg-accent/30 p-6">
+      <section className="rounded-2xl bg-card p-6 shadow-[var(--shadow-card)]">
         <h3 className="mb-6 font-display text-2xl">
           {t("signup.personalInfo")}
         </h3>

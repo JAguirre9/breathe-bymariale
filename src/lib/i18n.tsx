@@ -69,6 +69,32 @@ const dict: Dict = {
   "res.post3": { en: "The art of choosing rest", es: "El arte de elegir el descanso" },
   "res.post4": { en: "Sleep, breath and morning light", es: "Sueño, respiración y luz de la mañana" },
   "res.read": { en: "min read", es: "min de lectura" },
+  
+    // Resources – card bodies
+  "res.post1.body": {
+    en: "Slowing down is not laziness. It is a quiet act of care. Start with one breath, one pause, one moment without rushing.",
+    es: "Ir más despacio no es pereza. Es un acto silencioso de cuidado. Empieza con una respiración, una pausa, un momento sin prisa.",
+  },
+  "res.post2.body": {
+    en: "Anxiety often arrives as a soft knock. Notice it, name it, and give it space instead of fighting it. You are safe here.",
+    es: "La ansiedad a menudo llega como un golpecito suave. Nómbrala, dale espacio en lugar de pelear con ella. Aquí estás a salvo.",
+  },
+  "res.post3.body": {
+    en: "Rest is not something you earn. It is something your nervous system needs. Choosing rest is choosing yourself.",
+    es: "El descanso no es algo que debas ganar. Es algo que tu sistema nervioso necesita. Elegir descansar es elegirte a ti.",
+  },
+  "res.post4.body": {
+    en: "Morning light, a few slow breaths, and a soft intention. Small rituals can gently reshape how the day begins.",
+    es: "Luz de la mañana, unas respiraciones lentas y una intención suave. Los pequeños rituales pueden transformar cómo empieza el día.",
+  },
+  "res.clickToRead": {
+    en: "Click to read →",
+    es: "Haz clic para leer →",
+  },
+  "res.clickToClose": {
+    en: "← Click to close",
+    es: "← Haz clic para cerrar",
+  },
 
   // Start
   "start.title1": { en: "Begin,", es: "Empieza," },
