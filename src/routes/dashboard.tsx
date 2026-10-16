@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useT } from "@/lib/i18n";
 import { JournalSection } from "@/components/dashboard/JournalSection";
+import { SessionSpecialists } from "@/components/dashboard/SessionSpecialists";
 
 const PROFESSIONALS = [
   { id: "mariale", name: "Mariale Marulanda", role: "Founder & Specialist" },
@@ -18,8 +19,19 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
-type SessionEvent = { id: string; date: string; time: string; title: string };
-type Note = { id: string; date: string; createdAt: string; mood: number; text: string };
+type SessionEvent = {
+  id: string;
+  date: string;
+  time: string;
+  title: string;
+  specialist?: string;
+};
+type Note = { 
+  id: string; 
+  date: string; 
+  createdAt: string; 
+  mood: number; 
+  text: string };
 
 const MOODS = ["😞", "😕", "😐", "🙂", "😊"];
 
@@ -41,6 +53,8 @@ function Dashboard() {
   const [evTime, setEvTime] = useState("09:00");
   const [mood, setMood] = useState(3);
   const [noteText, setNoteText] = useState("");
+
+  const [selectedSpecialist, setSelectedSpecialist] = useState(PROFESSIONALS[0]?.name || "");
 
   // Guard + load
   useEffect(() => {
@@ -87,14 +101,20 @@ useEffect(() => {
   );
 
   const addEvent = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!evTitle.trim()) return;
-    setEvents((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), date: selectedKey, time: evTime, title: evTitle.trim() },
-    ]);
-    setEvTitle("");
-  };
+  e.preventDefault();
+  if (!selectedSpecialist) return;
+
+  setEvents((prev) => [
+    ...prev,
+    {
+      id: crypto.randomUUID(),
+      date: selectedKey,
+      time: evTime,
+      title: `Session with ${selectedSpecialist}`,
+      specialist: selectedSpecialist,
+    },
+  ]);
+};
 
   const removeEvent = (id: string) => setEvents((p) => p.filter((e) => e.id !== id));
 
@@ -139,44 +159,56 @@ useEffect(() => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
+
           {/* Calendar */}
-          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-1">
-            <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.calendar")}</h2>
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={(d) => d && setDate(d)}
-              modifiers={{ hasEvent: daysWithEvents }}
-              modifiersClassNames={{ hasEvent: "bg-primary/15 text-primary font-semibold rounded-md" }}
-              className="mx-auto"
-            />
-            <p className="mt-4 text-center text-sm text-foreground/60">{dateLabel}</p>
-          </section>
+              <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-1">
+                <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.calendar")}</h2>
+                
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(d) => d && setDate(d)}
+                  modifiers={{
+                    hasEvent: daysWithEvents,
+                  }}
+                  modifiersClassNames={{
+                    hasEvent: "relative bg-primary/10 text-primary font-semibold rounded-md after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
+                  }}
+                  className="mx-auto"
+                />
+
+                <p className="mt-4 text-center text-sm text-foreground/60">{dateLabel}</p>
+              </section>
 
           {/* Sessions */}
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-2">
             <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.sessions")}</h2>
 
-            <div className="mb-6">
-              <p className="mb-2 text-xs uppercase tracking-wide text-foreground/50">Specialists</p>
-              <ul className="space-y-2">
-                {PROFESSIONALS.map((p) => (
-                  <li key={p.id} className="flex items-center gap-3 rounded-2xl border border-border/50 bg-background/50 px-4 py-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
-                      {p.name.split(" ").map((s) => s[0]).slice(0, 2).join("")}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{p.name}</p>
-                      <p className="text-xs text-foreground/60">{p.role}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            <SessionSpecialists />
 
-            <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
-              <Input placeholder={t("dash.sessions.placeholder")} value={evTitle} onChange={(e) => setEvTitle(e.target.value)} className="rounded-xl" />
-              <Input type="time" value={evTime} onChange={(e) => setEvTime(e.target.value)} className="rounded-xl sm:w-32" />
+            {/* Add New Session Form */}
+            <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
+              
+              {/* Specialist Dropdown */}
+              <select
+                value={selectedSpecialist}
+                onChange={(e) => setSelectedSpecialist(e.target.value)}
+                className="rounded-xl border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                {PROFESSIONALS.map((p) => (
+                  <option key={p.id} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+              
+              <Input
+                type="time"
+                value={evTime}
+                onChange={(e) => setEvTime(e.target.value)}
+                className="rounded-xl sm:w-32"
+              />
+
               <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
                 {t("dash.add")}
               </Button>
@@ -190,7 +222,12 @@ useEffect(() => {
                   <li key={e.id} className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/50 px-4 py-3">
                     <div className="flex items-center gap-4">
                       <span className="font-mono text-sm font-semibold text-primary">{e.time}</span>
-                      <span className="text-foreground">{e.title}</span>
+                      <div>
+                        <span className="text-foreground">{e.title}</span>
+                        {e.specialist && (
+                          <p className="text-xs text-foreground/60 mt-0.5">{e.specialist}</p>
+                        )}
+                      </div>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => removeEvent(e.id)} className="text-foreground/50 hover:text-destructive">×</Button>
                   </li>
@@ -202,6 +239,7 @@ useEffect(() => {
           {/* Notes / Mood */}
             <JournalSection
               userId={userId}
+              userName={userName}
               selectedDate={date}
             />
         </div>

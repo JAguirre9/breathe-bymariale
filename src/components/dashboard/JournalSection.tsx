@@ -48,15 +48,17 @@ function relativeLabel(entry: JournalEntry, lang: string) {
 
 export function JournalSection({
   userId,
+  userName,
   selectedDate,
 }: {
   userId: string | null;
+  userName: string;
   selectedDate?: Date;
 }) {
   const { t, lang } = useT();
 
 if (!userId) {
-  return <div className="rounded-3xl bg-card p-6">Loading journal...</div>;
+  return <div className="rounded-3xl bg-card p-6">{t("js.loadJournal")}</div>;
 }
 
   const [entries, setEntries] = useState<JournalEntry[]>([]);
@@ -150,49 +152,61 @@ if (!userId) {
 
   return (
     <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-3">
-      <h2 className="mb-1 font-display text-xl font-semibold">{t("journal.title")}</h2>
+      <h2 className="mb-1 font-display text-xl font-semibold">  {userName? `${userName}'s ${t("js.journal")}` : t("js.journal")}</h2>
       <p className="mb-5 text-sm text-foreground/60">{t("journal.subtitle")}</p>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left column — index */}
         <div className="lg:w-[30%]">
-          <button
+            <button
             type="button"
-            onClick={startNewEntry}
-            className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition hover:bg-primary/10"
-          >
-            <span className="text-lg leading-none">+</span>
-            {t("Add a note to your Journal")}
-          </button>
+                onClick={startNewEntry}
+                className="mb-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-primary/40 bg-primary/5 px-4 py-3 text-sm font-medium text-primary transition hover:bg-primary/10"
+                >
+                <span className="text-lg leading-none">+</span>
+                {t("journal.new")}
+            </button> 
 
-          {sortedEntries.length === 0 ? (
+        {sortedEntries.length === 0 ? (
             <p className="px-1 text-sm text-foreground/50">{t("journal.empty")}</p>
-          ) : (
+        ) : (
             <ul className="space-y-2">
-              {sortedEntries.map((entry) => {
+            {sortedEntries.map((entry) => {
                 const active = entry.id === activeId && !isDraft;
                 return (
-                  <li key={entry.id}>
+                <li key={entry.id}>
                     <button
-                      type="button"
-                      onClick={() => loadEntry(entry)}
-                      className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                    type="button"
+                    onClick={() => loadEntry(entry)}
+                    className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                         active
-                          ? "border-primary/50 bg-primary/10"
-                          : "border-border/50 bg-background/50 hover:bg-background"
-                      }`}
+                        ? "border-primary/50 bg-primary/10"
+                        : "border-border/50 bg-background/50 hover:bg-background"
+                    }`}
                     >
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
                         <span className="text-lg leading-none">{JOURNAL_MOODS[entry.mood - 1]}</span>
                         <span className="truncate text-sm font-medium text-foreground">{entry.title}</span>
-                      </div>
-                      <p className="mt-1 text-xs text-foreground/50">{relativeLabel(entry, lang)}</p>
+                    </div>
+                    
+                    {/* Updated: Show Date + Time */}
+                    <p className="mt-1 text-xs text-foreground/50">
+                        {new Date(entry.createdAt).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", {
+                        month: "short",
+                        day: "numeric",
+                        })} 
+                        {" • "}
+                        {new Date(entry.createdAt).toLocaleTimeString(lang === "es" ? "es-ES" : "en-US", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        })}
+                    </p>
                     </button>
-                  </li>
+                </li>
                 );
-              })}
+            })}
             </ul>
-          )}
+        )}
         </div>
 
         {/* Right column — editor */}

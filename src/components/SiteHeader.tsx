@@ -1,4 +1,5 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouter } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import logo from "@/assets/breathe-logo.png";
 import { Button } from "@/components/ui/button";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -6,6 +7,31 @@ import { useT } from "@/lib/i18n";
 
 export function SiteHeader() {
   const { t } = useT();
+  const router = useRouter();
+  const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+
+  // Check if user is logged in
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const raw = localStorage.getItem("breathe.user");
+    if (raw) {
+      try {
+        setUser(JSON.parse(raw));
+      } catch {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("breathe.user");
+    setUser(null);
+    router.navigate({ to: "/" });
+  };
+
   const nav = [
     { to: "/services", label: t("nav.services") },
     { to: "/resources", label: t("nav.resources") },
@@ -38,15 +64,41 @@ export function SiteHeader() {
 
         <div className="flex items-center gap-2">
           <LanguageToggle />
-          <Button asChild variant="ghost" className="rounded-full text-foreground hover:bg-accent">
-            <Link to="/login">{t("nav.login")}</Link>
-          </Button>
-          <Button
-            asChild
-            className="rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90"
-          >
-            <Link to="/signup">{t("nav.signup")}</Link>
-          </Button>
+
+          {user ? (
+            <>
+              <Button
+                asChild
+                variant="ghost"
+                className="rounded-full text-foreground hover:bg-accent"
+              >
+                <Link to="/dashboard">Dashboard</Link>
+              </Button>
+              <Button
+                onClick={logout}
+                variant="ghost"
+                className="rounded-full text-foreground hover:bg-accent"
+              >
+                {t("dash.logout")}
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                asChild
+                variant="ghost"
+                className="rounded-full text-foreground hover:bg-accent"
+              >
+                <Link to="/login">{t("nav.login")}</Link>
+              </Button>
+              <Button
+                asChild
+                className="rounded-full bg-primary text-primary-foreground shadow-[var(--shadow-soft)] hover:bg-primary/90"
+              >
+                <Link to="/signup">{t("nav.signup")}</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

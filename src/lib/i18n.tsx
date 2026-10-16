@@ -358,6 +358,60 @@ const dict: Dict = {
   },
   "dash.save": { en: "Save entry", es: "Guardar entrada" },
   "dash.notes.empty": { en: "No notes yet for this day.", es: "Aún no hay notas para este día." },
+
+  //JournalSection
+  "js.loadJournal": { en: "Loading journal...", es: "Cargando tu diario..." },
+  "js.journal.title" : {en: "{{name}}'s Journal", es: "Diario de {{name}}"},
+    // Journal
+  "journal.title": {
+    en: "Journal",
+    es: "Diario",
+  },
+  "journal.subtitle": {
+    en: "A quiet space for your thoughts and feelings.",
+    es: "Un espacio tranquilo para tus pensamientos y sentimientos.",
+  },
+  "journal.new": {
+    en: "Add a note to your Journal",
+    es: "Añadir una nota a tu Diario",
+  },
+  "journal.empty": {
+    en: "No entries yet. Start writing when you're ready.",
+    es: "Aún no hay entradas. Empieza a escribir cuando te sientas listo.",
+  },
+  "journal.untitled": {
+    en: "Untitled",
+    es: "Sin título",
+  },
+  "journal.field.title": {
+    en: "Title",
+    es: "Título",
+  },
+  "journal.field.title.placeholder": {
+    en: "Give this entry a title…",
+    es: "Dale un título a esta entrada…",
+  },
+  "journal.field.mood": {
+    en: "How are you feeling?",
+    es: "¿Cómo te sientes?",
+  },
+  "journal.field.body": {
+    en: "Your thoughts",
+    es: "Tus pensamientos",
+  },
+  "journal.field.body.placeholder": {
+    en: "Write freely… What came up today?",
+    es: "Escribe libremente… ¿Qué surgió hoy?",
+  },
+  "journal.save": {
+    en: "Save entry",
+    es: "Guardar entrada",
+  },
+  "journal.delete": {
+    en: "Delete",
+    es: "Eliminar",
+  },
+
 };
 
 export type TKey = keyof typeof dict;
