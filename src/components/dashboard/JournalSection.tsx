@@ -152,8 +152,8 @@ if (!userId) {
 
   return (
     <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-3">
-      <h2 className="mb-1 font-display text-xl font-semibold">  {userName? `${userName}'s ${t("js.journal")}` : t("js.journal")}</h2>
-      <p className="mb-5 text-sm text-foreground/60">{t("journal.subtitle")}</p>
+      <h2 className="mb-1 font-display text-xl font-semibold"> {userName ? lang === "es" ? `Diario de ${userName}` :`${userName}'s ${t("journal.title")}`: t("journal.title")}</h2>
+      <p className="mb-5 text-sm text-foreground/60"> {t("journal.subtitle")} </p>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left column — index */}

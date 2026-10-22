@@ -113,7 +113,7 @@ function SignupPage() {
                 onBack={() => setSelectedRole(null)}
               />
             )}
-
+            {/*
             {selectedRole === "PSYCHOLOGIST" && (
               <PsychologistForm
                 intake={intake}
@@ -122,7 +122,7 @@ function SignupPage() {
                 isSubmitting={isSubmitting}
                 onBack={() => setSelectedRole(null)}
               />
-            )}
+            )} */}
           </>
         )}
 

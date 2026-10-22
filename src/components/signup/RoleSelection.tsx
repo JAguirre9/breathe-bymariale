@@ -30,7 +30,7 @@ export function RoleSelection({
         </p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-1 max-w-md mx-auto">
 
         {/* Patient Card */}
 
@@ -60,7 +60,9 @@ export function RoleSelection({
           </CardContent>
         </Card>
 
-        {/* Psychologist Card */}
+        {/* Deactivate while MVP
+        
+        //Psychologist Card 
 
         <Card
           onClick={() => setSelectedRole("PSYCHOLOGIST")}
@@ -87,9 +89,9 @@ export function RoleSelection({
 
           </CardContent>
         </Card>
-
+          */}
       </div>
-
+          
       {selectedRole && (
         <div className="flex justify-center pt-4">
 

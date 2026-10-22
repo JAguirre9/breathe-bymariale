@@ -153,9 +153,6 @@ useEffect(() => {
               {userName || t("dash.title")}
             </h1>
           </div>
-          <Button variant="ghost" onClick={logout} className="rounded-full">
-            {t("dash.logout")}
-          </Button>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -179,17 +176,21 @@ useEffect(() => {
 
                 <p className="mt-4 text-center text-sm text-foreground/60">{dateLabel}</p>
               </section>
-
+                  
           {/* Sessions */}
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-2">
             <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.sessions")}</h2>
 
             <SessionSpecialists />
-
-            {/* Add New Session Form */}
+            
+            {/* 
+            Disable while MVP 
+            
+            //Add New Session Form 
             <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
               
-              {/* Specialist Dropdown */}
+               //Specialist Dropdown 
+
               <select
                 value={selectedSpecialist}
                 onChange={(e) => setSelectedSpecialist(e.target.value)}
@@ -212,8 +213,8 @@ useEffect(() => {
               <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
                 {t("dash.add")}
               </Button>
-            </form>
-
+            </form> */}
+                
             {dayEvents.length === 0 ? (
               <p className="text-sm text-foreground/50">{t("dash.sessions.empty")}</p>
             ) : (
