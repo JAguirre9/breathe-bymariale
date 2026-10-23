@@ -9,6 +9,7 @@ export function SiteHeader() {
   const { t } = useT();
   const router = useRouter();
   const [user, setUser] = useState<{ name?: string; email?: string } | null>(null);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
   // Check if user is logged in
   useEffect(() => {
@@ -26,11 +27,20 @@ export function SiteHeader() {
     }
   }, []);
 
-  const logout = () => {
-    localStorage.removeItem("breathe.user");
-    setUser(null);
-    router.navigate({ to: "/" });
-  };
+  const logout = async () => {
+  try {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // ignore network errors on logout
+  }
+
+  localStorage.removeItem("breathe.user");
+  setUser(null);
+  router.navigate({ to: "/" });
+};
 
   const nav = [
     { to: "/services", label: t("nav.services") },

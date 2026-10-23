@@ -11,6 +11,8 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+
 function Login() {
   const { t } = useT();
   const router = useRouter();
@@ -18,24 +20,47 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem(
-        "breathe.user",
-        JSON.stringify({ id: "local-user", name: email.split("@")[0] || "You", email }),
-      );
-    }
-    router.navigate({ to: "/dashboard" });
-  };
+    setError("");
 
-  const useMockUser = () => {
-    if (typeof window === "undefined") return;
-    const mock = { id: "mock-user-1", name: "Test Consultant", email: "test@breathe.local" };
-    localStorage.setItem("breathe.user", JSON.stringify(mock));
-    router.navigate({ to: "/dashboard" });
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include", // required for cookies
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || t("auth.error.invalidCredentials"));
+        return;
+      }
+
+      // Keep a small local copy for UI (name in header/dashboard)
+      if (data.user) {
+        localStorage.setItem(
+          "breathe.user",
+          JSON.stringify({
+            id: data.user.id,
+            name: data.user.firstName || data.user.username,
+            email: data.user.email,
+            role: data.user.role,
+          })
+        );
+      }
+
+      router.navigate({ to: "/dashboard" });
+    } catch {
+      setError(t("auth.error.generic"));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -43,7 +68,9 @@ function Login() {
       <SiteHeader />
       <main className="mx-auto flex max-w-md flex-col px-6 pt-40 pb-24">
         <div className="rounded-3xl bg-card p-10 shadow-[var(--shadow-card)]">
-          <h1 className="font-display text-3xl font-semibold text-foreground">{t("auth.welcome")}</h1>
+          <h1 className="font-display text-3xl font-semibold text-foreground">
+            {t("auth.welcome")}
+          </h1>
           <p className="mt-2 text-sm text-foreground/60">{t("auth.welcome.sub")}</p>
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
@@ -58,6 +85,7 @@ function Login() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
+
             <div>
               <Label htmlFor="password">{t("auth.password")}</Label>
               <Input
@@ -70,24 +98,17 @@ function Login() {
               />
             </div>
 
+            {error && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
+
             <Button
               type="submit"
               disabled={loading}
               className="mt-2 w-full rounded-full bg-primary py-6 text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
             >
-              {loading ? "Logging in..." : t("auth.login")}
+              {loading ? "..." : t("auth.login")}
             </Button>
-
-            {import.meta.env.VITE_SHOW_MOCK_USER === "true" && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={useMockUser}
-                className="w-full rounded-full"
-              >
-                Use mock user (dev)
-              </Button>
-            )}
           </form>
 
           <p className="mt-6 text-center text-sm text-foreground/60">
