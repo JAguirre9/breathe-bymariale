@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { JournalSection } from "@/components/dashboard/JournalSection";
 import { SessionSpecialists } from "@/components/dashboard/SessionSpecialists";
@@ -77,14 +78,34 @@ function Dashboard() {
   }, [router]);
 
   useEffect(() => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`breathe.events.${userId}`, JSON.stringify(events));
-}, [events, userId]);
+  if (typeof window === "undefined") return;
 
-useEffect(() => {
-  if (typeof window === "undefined" || !userId) return;
-  localStorage.setItem(`breathe.notes.${userId}`, JSON.stringify(notes));
-}, [notes, userId]);
+  const raw = localStorage.getItem("breathe.user");
+  if (!raw) {
+    router.navigate({ to: "/login" });
+    return;
+  }
+
+  const u = JSON.parse(raw);
+  setUserId(String(u.id));
+  setUserName(u.name || u.email || "");
+
+  // Load sessions from API
+  apiFetch("/sessions")
+    .then((data) => {
+      const list = (data.sessions || []).map((s: any) => ({
+        id: s.id,
+        date: s.date,
+        time: s.time,
+        title: s.title,
+        specialist: s.specialist || undefined,
+      }));
+      setEvents(list);
+    })
+    .catch((err) => {
+      console.error(err);
+    });
+}, [router]);
 
   const selectedKey = fmtKey(date);
   const dayEvents = useMemo(
@@ -116,7 +137,15 @@ useEffect(() => {
   ]);
 };
 
-  const removeEvent = (id: string) => setEvents((p) => p.filter((e) => e.id !== id));
+  const removeEvent = async (id: string) => {
+  try {
+    await apiFetch(`/sessions/${id}`, { method: "DELETE" });
+    setEvents((p) => p.filter((e) => e.id !== id));
+  } catch (err) {
+    console.error(err);
+    alert("Could not delete session");
+  }
+};
 
   const addNote = (e: React.FormEvent) => {
     e.preventDefault();
