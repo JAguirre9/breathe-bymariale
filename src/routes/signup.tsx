@@ -38,27 +38,47 @@ function SignupPage() {
   const [intake, setIntake] =
     useState<SignupIntake>(defaultSignupIntake);
 
-  async function handlePatientSubmit(
-    e: React.FormEvent<HTMLFormElement>
-  ) {
-    e.preventDefault();
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
 
-    setIsSubmitting(true);
+async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  setIsSubmitting(true);
 
-    try {
-      console.log("PATIENT");
-      console.table(intake);
+  try {
+    const res = await fetch(`${API_URL}/intake/patient`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        firstName: intake.firstName,
+        lastName: intake.lastName,
+        preferredName: intake.preferredName,
+        email: intake.email,
+        phoneCode: intake.phoneCode,
+        phoneNumber: intake.phoneNumber,
+        contactMethod: intake.contactMethod,
+        age: intake.age,
+        feelings: intake.feelings,
+        priorSessions: intake.priorSessions,
+      }),
+    });
 
-      /**
-       * Future:
-       * POST /api/intake/patient
-       */
+    const data = await res.json();
 
-      setIsSuccess(true);
-    } finally {
-      setIsSubmitting(false);
+    if (!res.ok) {
+      console.error(data);
+      alert(data.error || "Could not submit form");
+      return;
     }
+
+    setIsSuccess(true);
+  } catch (err) {
+    console.error(err);
+    alert("Could not connect to server");
+  } finally {
+    setIsSubmitting(false);
   }
+}
 
   async function handlePsychologistSubmit(
     e: React.FormEvent<HTMLFormElement>
