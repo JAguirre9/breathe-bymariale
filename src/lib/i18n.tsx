@@ -385,6 +385,10 @@ const dict: Dict = {
   "dash.save": { en: "Save entry", es: "Guardar entrada" },
   "dash.notes.empty": { en: "No notes yet for this day.", es: "Aún no hay notas para este día." },
 
+  "dash.tasks.title": {es: "Tareas del especialista",en : "Specialist tasks"},
+  "dash.tasks.subtitle": {es: "Actividades que te dejó tu especialista", en: "Activities your specialist left for you"},
+  "dash.tasks.empty": {es: "No tienes tareas pendientes.", en: "You have no pending tasks."},
+
   //JournalSection
   "js.loadJournal": { en: "Loading journal...", es: "Cargando tu diario..." },
   "js.journal.title" : {en: "{{name}}'s Journal", es: "Diario de {{name}}"},
