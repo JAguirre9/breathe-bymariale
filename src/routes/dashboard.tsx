@@ -50,22 +50,7 @@ function Dashboard() {
   const [userName, setUserName] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [events, setEvents] = useState<SessionEvent[]>([]);
-  const [tasks, setTasks] = useState<SpecialistTask[]>([
-    // Example tasks left by the specialist (replace later with API)
-    {
-      id: "1",
-      title: "Practicar respiración 4-7-8",
-      description: "Hazlo 2 veces al día durante 5 minutos",
-      done: false,
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "2",
-      title: "Escribir 3 cosas por las que estás agradecido",
-      done: false,
-      createdAt: new Date().toISOString(),
-    },
-  ]);
+  const [tasks, setTasks] = useState<SpecialistTask[]>([]);
 
   const [evTime, setEvTime] = useState("09:00");
   const [selectedSpecialist, setSelectedSpecialist] = useState(
@@ -102,6 +87,21 @@ function Dashboard() {
         console.error(err);
       });
   }, [router]);
+
+      apiFetch("/tasks")
+      .then((data) => {
+        const list = (data.tasks || []).map((tk: any) => ({
+          id: tk.id,
+          title: tk.title,
+          description: tk.description || undefined,
+          done: tk.done,
+          createdAt: tk.createdAt,
+        }));
+        setTasks(list);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
 
   const selectedKey = fmtKey(date);
 
@@ -169,12 +169,28 @@ function Dashboard() {
     }
   };
 
-  const toggleTask = (id: string) => {
+    const toggleTask = async (id: string) => {
+    const current = tasks.find((task) => task.id === id);
+    if (!current) return;
+    const nextDone = !current.done;
+
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, done: !task.done } : task
-      )
+      prev.map((task) => (task.id === id ? { ...task, done: nextDone } : task))
     );
+
+    try {
+      await apiFetch(`/tasks/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ done: nextDone }),
+      });
+    } catch (err) {
+      console.error(err);
+      setTasks((prev) =>
+        prev.map((task) =>
+          task.id === id ? { ...task, done: current.done } : task
+        )
+      );
+    }
   };
 
   const dateLabel = date.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", {
