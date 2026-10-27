@@ -318,15 +318,15 @@ function Dashboard() {
           {/* 3. Tasks left by the Specialist */}
           <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
             <h2 className="mb-1 font-display text-xl font-semibold">
-              Tareas del especialista
+              {t("dash.tasks.title")}
             </h2>
             <p className="mb-4 text-sm text-foreground/60">
-              Actividades que te dejó tu especialista
+            {t("dash.tasks.subtitle")}
             </p>
 
             {tasks.length === 0 ? (
               <p className="text-sm text-foreground/50">
-                No tienes tareas pendientes.
+                {t("dash.tasks.empty")}
               </p>
             ) : (
               <ul className="space-y-3">
