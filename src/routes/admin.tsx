@@ -39,6 +39,15 @@ type Resource = {
   published: boolean;
 };
 
+type JournalEntry = {
+  id: string;
+  date: string;
+  title: string;
+  mood: number;
+  text: string;
+  createdAt: string;
+};
+
 const ALLOWED_ROLES = ["ADMIN"];
 
 function AdminPage() {
@@ -58,6 +67,11 @@ function AdminPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
+
+  //Patient journal read-only 
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [journalLoading, setJournalLoading] = useState(false);
+  const [activeJournalId, setActiveJournalId] = useState<string | null>(null);
 
   // Resources CMS
   const [resources, setResources] = useState<Resource[]>([]);
@@ -122,18 +136,37 @@ function AdminPage() {
   }, []);
 
   // Load tasks for selected patient
-  useEffect(() => {
+    useEffect(() => {
     setEditingId(null);
+    setActiveJournalId(null);
+
     if (!patientId) {
       setTasks([]);
+      setJournalEntries([]);
       return;
     }
+
+    // Tasks
     apiFetch(`/tasks/patient/${patientId}`)
       .then((data) => setTasks(data.tasks || []))
       .catch((err) => {
         console.error(err);
         setError(t("admin.error"));
       });
+
+    // Journal
+    setJournalLoading(true);
+    apiFetch(`/admin/patients/${patientId}/journal`)
+      .then((data) => {
+        const list: JournalEntry[] = data.entries || [];
+        setJournalEntries(list);
+        if (list.length > 0) setActiveJournalId(list[0].id);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError(t("admin.error"));
+      })
+      .finally(() => setJournalLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
@@ -269,10 +302,10 @@ function AdminPage() {
   const patientLabel = (p: Patient) =>
     `${p.firstName}${p.lastName ? " " + p.lastName : ""} (${p.email})`;
 
-  return (
+    return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
-      <main className="mx-auto max-w-3xl px-6 pt-32 pb-20">
+      <main className="mx-auto max-w-6xl px-6 pt-32 pb-20">
         <h1 className="font-display text-4xl font-semibold text-foreground">
           {t("admin.title")}
         </h1>
@@ -310,123 +343,206 @@ function AdminPage() {
         </section>
 
         {patientId && (
-          <>
-            <form
-              onSubmit={addTask}
-              className="mb-6 space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
-            >
-              <h2 className="font-display text-xl font-semibold">
-                {t("admin.newTask")}
-              </h2>
-              <Input
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder={t("admin.taskTitle")}
-                className="rounded-xl"
-              />
-              <Textarea
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-                placeholder={t("admin.taskDesc")}
-                className="rounded-xl"
-              />
-              <Button
-                type="submit"
-                disabled={saving || !newTitle.trim()}
-                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+          <div className="mb-12 grid gap-6 lg:grid-cols-2">
+            {/* Left: Tasks */}
+            <div className="space-y-6">
+              <form
+                onSubmit={addTask}
+                className="space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
               >
-                {t("admin.addTask")}
-              </Button>
-            </form>
+                <h2 className="font-display text-xl font-semibold">
+                  {t("admin.newTask")}
+                </h2>
+                <Input
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  placeholder={t("admin.taskTitle")}
+                  className="rounded-xl"
+                />
+                <Textarea
+                  value={newDesc}
+                  onChange={(e) => setNewDesc(e.target.value)}
+                  placeholder={t("admin.taskDesc")}
+                  className="rounded-xl"
+                />
+                <Button
+                  type="submit"
+                  disabled={saving || !newTitle.trim()}
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {t("admin.addTask")}
+                </Button>
+              </form>
 
+              <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+                {tasks.length === 0 ? (
+                  <p className="text-sm text-foreground/50">
+                    {t("admin.tasks.empty")}
+                  </p>
+                ) : (
+                  <ul className="space-y-3">
+                    {tasks.map((task) => (
+                      <li
+                        key={task.id}
+                        className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                      >
+                        {editingId === task.id ? (
+                          <div className="space-y-2">
+                            <Input
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              className="rounded-xl"
+                            />
+                            <Textarea
+                              value={editDesc}
+                              onChange={(e) => setEditDesc(e.target.value)}
+                              className="rounded-xl"
+                            />
+                            <div className="flex gap-2">
+                              <Button size="sm" onClick={() => saveEdit(task.id)}>
+                                {t("admin.save")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => setEditingId(null)}
+                              >
+                                {t("admin.cancel")}
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0 flex-1">
+                              <p
+                                className={`text-sm font-medium ${
+                                  task.done
+                                    ? "line-through text-foreground/50"
+                                    : "text-foreground"
+                                }`}
+                              >
+                                {task.title}
+                              </p>
+                              {task.description && (
+                                <p className="mt-0.5 text-xs text-foreground/60">
+                                  {task.description}
+                                </p>
+                              )}
+                              {task.done && (
+                                <p className="mt-1 text-xs font-medium text-primary">
+                                  ✓ {t("admin.done")}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex shrink-0 gap-1">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => startEdit(task)}
+                              >
+                                {t("admin.edit")}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => removeTask(task.id)}
+                                className="text-foreground/50 hover:text-destructive"
+                              >
+                                {t("admin.delete")}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            </div>
+
+            {/* Right: Journal */}
             <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-              {tasks.length === 0 ? (
+              <h2 className="font-display text-xl font-semibold">{t("journal.title")}</h2>
+              <p className="mt-1 mb-4 text-sm text-foreground/60">
+                {t("journal.read.only")}
+              </p>
+
+              {journalLoading ? (
+                <p className="text-sm text-foreground/50">…</p>
+              ) : journalEntries.length === 0 ? (
                 <p className="text-sm text-foreground/50">
-                  {t("admin.tasks.empty")}
+                  {t("journal.empty")}
                 </p>
               ) : (
-                <ul className="space-y-3">
-                  {tasks.map((task) => (
-                    <li
-                      key={task.id}
-                      className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
-                    >
-                      {editingId === task.id ? (
-                        <div className="space-y-2">
-                          <Input
-                            value={editTitle}
-                            onChange={(e) => setEditTitle(e.target.value)}
-                            className="rounded-xl"
-                          />
-                          <Textarea
-                            value={editDesc}
-                            onChange={(e) => setEditDesc(e.target.value)}
-                            className="rounded-xl"
-                          />
-                          <div className="flex gap-2">
-                            <Button size="sm" onClick={() => saveEdit(task.id)}>
-                              {t("admin.save")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setEditingId(null)}
-                            >
-                              {t("admin.cancel")}
-                            </Button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <p
-                              className={`text-sm font-medium ${
-                                task.done
-                                  ? "line-through text-foreground/50"
-                                  : "text-foreground"
-                              }`}
-                            >
-                              {task.title}
+                <div className="flex flex-col gap-4">
+                  <ul className="max-h-48 space-y-2 overflow-y-auto">
+                    {journalEntries.map((entry) => {
+                      const active = entry.id === activeJournalId;
+                      const moods = ["😀", "😌", "😐", "😔", "😭"];
+                      return (
+                        <li key={entry.id}>
+                          <button
+                            type="button"
+                            onClick={() => setActiveJournalId(entry.id)}
+                            className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                              active
+                                ? "border-primary/50 bg-primary/10"
+                                : "border-border/50 bg-background/50 hover:bg-background"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">
+                                {moods[entry.mood - 1] ?? "😐"}
+                              </span>
+                              <span className="truncate text-sm font-medium">
+                                {entry.title}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs text-foreground/50">
+                              {entry.date}
                             </p>
-                            {task.description && (
-                              <p className="mt-0.5 text-xs text-foreground/60">
-                                {task.description}
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  <div className="rounded-2xl border border-border/50 bg-background/50 p-4">
+                    {(() => {
+                      const entry = journalEntries.find(
+                        (e) => e.id === activeJournalId
+                      );
+                      if (!entry) return null;
+                      const moods = ["😀", "😌", "😐", "😔", "😭"];
+                      return (
+                        <>
+                          <div className="mb-3 flex items-center gap-2">
+                            <span className="text-2xl">
+                              {moods[entry.mood - 1] ?? "😐"}
+                            </span>
+                            <div>
+                              <p className="font-medium text-foreground">
+                                {entry.title}
                               </p>
-                            )}
-                            {task.done && (
-                              <p className="mt-1 text-xs font-medium text-primary">
-                                ✓ {t("admin.done")}
+                              <p className="text-xs text-foreground/50">
+                                {entry.date}
                               </p>
-                            )}
+                            </div>
                           </div>
-                          <div className="flex shrink-0 gap-1">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => startEdit(task)}
-                            >
-                              {t("admin.edit")}
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => removeTask(task.id)}
-                              className="text-foreground/50 hover:text-destructive"
-                            >
-                              {t("admin.delete")}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
+                            {entry.text || "—"}
+                          </p>
+                        </>
+                      );
+                    })()}
+                  </div>
+                </div>
               )}
             </section>
-          </>
+          </div>
         )}
 
-        {/* ── Resources CMS ── */}
+        {/* Resources CMS */}
         <section className="mt-12">
           <h2 className="font-display text-3xl font-semibold text-foreground">
             Resources

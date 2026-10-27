@@ -461,6 +461,11 @@ const dict: Dict = {
     es: "Eliminar",
   },
 
+  "journal.read.only": {
+    en: "What this patient has written (read-only).",
+    es: "Lo que el paciente ha escrito (solo lectura).",
+  },
+
 };
 
 export type TKey = keyof typeof dict;
