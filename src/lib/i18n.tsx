@@ -389,6 +389,25 @@ const dict: Dict = {
   "dash.tasks.subtitle": {es: "Actividades que te dejó tu especialista", en: "Activities your specialist left for you"},
   "dash.tasks.empty": {es: "No tienes tareas pendientes.", en: "You have no pending tasks."},
 
+    // Admin
+  "admin.title": { en: "Admin panel", es: "Panel de administración" },
+  "admin.subtitle": { en: "Manage tasks for your patients", es: "Gestiona las tareas de tus pacientes" },
+  "admin.patient": { en: "Patient", es: "Paciente" },
+  "admin.selectPatient": { en: "Select a patient", es: "Selecciona un paciente" },
+  "admin.noPatients": { en: "No active patients yet.", es: "Aún no hay pacientes activos." },
+  "admin.newTask": { en: "New task", es: "Nueva tarea" },
+  "admin.taskTitle": { en: "Task title", es: "Título de la tarea" },
+  "admin.taskDesc": { en: "Description (optional)", es: "Descripción (opcional)" },
+  "admin.addTask": { en: "Add task", es: "Añadir tarea" },
+  "admin.tasks.empty": { en: "This patient has no tasks yet.", es: "Este paciente aún no tiene tareas." },
+  "admin.edit": { en: "Edit", es: "Editar" },
+  "admin.delete": { en: "Delete", es: "Eliminar" },
+  "admin.save": { en: "Save", es: "Guardar" },
+  "admin.cancel": { en: "Cancel", es: "Cancelar" },
+  "admin.confirmDelete": { en: "Delete this task?", es: "¿Eliminar esta tarea?" },
+  "admin.done": { en: "Completed", es: "Completada" },
+  "admin.error": { en: "Something went wrong. Please try again.", es: "Algo salió mal. Inténtalo de nuevo." },
+  
   //JournalSection
   "js.loadJournal": { en: "Loading journal...", es: "Cargando tu diario..." },
   "js.journal.title" : {en: "{{name}}'s Journal", es: "Diario de {{name}}"},

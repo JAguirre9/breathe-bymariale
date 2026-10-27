@@ -55,7 +55,9 @@ function Login() {
         );
       }
 
-      router.navigate({ to: "/dashboard" });
+      router.navigate({
+        to: data.user?.role === "ADMIN" ? "/admin" : "/dashboard",
+      });
     } catch {
       setError(t("auth.error.generic"));
     } finally {
