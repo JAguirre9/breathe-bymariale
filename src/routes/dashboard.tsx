@@ -4,8 +4,6 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { JournalSection } from "@/components/dashboard/JournalSection";
@@ -27,17 +25,21 @@ type SessionEvent = {
   title: string;
   specialist?: string;
 };
-type Note = { 
-  id: string; 
-  date: string; 
-  createdAt: string; 
-  mood: number; 
-  text: string };
 
-const MOODS = ["😞", "😕", "😐", "🙂", "😊"];
+type SpecialistTask = {
+  id: string;
+  title: string;
+  description?: string;
+  done: boolean;
+  createdAt: string;
+};
 
 function fmtKey(d: Date) {
-  return d.toISOString().slice(0, 10);
+  // Local date (avoids timezone shift from toISOString)
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function Dashboard() {
@@ -48,121 +50,131 @@ function Dashboard() {
   const [userName, setUserName] = useState<string>("");
   const [date, setDate] = useState<Date>(new Date());
   const [events, setEvents] = useState<SessionEvent[]>([]);
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [tasks, setTasks] = useState<SpecialistTask[]>([
+    // Example tasks left by the specialist (replace later with API)
+    {
+      id: "1",
+      title: "Practicar respiración 4-7-8",
+      description: "Hazlo 2 veces al día durante 5 minutos",
+      done: false,
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "2",
+      title: "Escribir 3 cosas por las que estás agradecido",
+      done: false,
+      createdAt: new Date().toISOString(),
+    },
+  ]);
 
-  const [evTitle, setEvTitle] = useState("");
   const [evTime, setEvTime] = useState("09:00");
-  const [mood, setMood] = useState(3);
-  const [noteText, setNoteText] = useState("");
+  const [selectedSpecialist, setSelectedSpecialist] = useState(
+    PROFESSIONALS[0]?.name || ""
+  );
+  const [isAdding, setIsAdding] = useState(false);
 
-  const [selectedSpecialist, setSelectedSpecialist] = useState(PROFESSIONALS[0]?.name || "");
-
-  // Guard + load
+  // Load user + sessions
   useEffect(() => {
-
     if (typeof window === "undefined") return;
 
     const raw = localStorage.getItem("breathe.user");
-  if (!raw) {
-    router.navigate({ to: "/login" });
-    return;
-  }
+    if (!raw) {
+      router.navigate({ to: "/login" });
+      return;
+    }
+
     const u = JSON.parse(raw);
     setUserId(String(u.id));
     setUserName(u.name || u.email || "");
-    
-    const evRaw = localStorage.getItem(`breathe.events.${u.id}`);
-    const ntRaw = localStorage.getItem(`breathe.notes.${u.id}`);
-    if (evRaw) setEvents(JSON.parse(evRaw));
-    if (ntRaw) setNotes(JSON.parse(ntRaw));
+
+    apiFetch("/sessions")
+      .then((data) => {
+        const list = (data.sessions || []).map((s: any) => ({
+          id: s.id,
+          date: s.date,
+          time: s.time,
+          title: s.title,
+          specialist: s.specialist || undefined,
+        }));
+        setEvents(list);
+      })
+      .catch((err) => {
+        console.error(err);
+      });
   }, [router]);
 
-  useEffect(() => {
-  if (typeof window === "undefined") return;
-
-  const raw = localStorage.getItem("breathe.user");
-  if (!raw) {
-    router.navigate({ to: "/login" });
-    return;
-  }
-
-  const u = JSON.parse(raw);
-  setUserId(String(u.id));
-  setUserName(u.name || u.email || "");
-
-  // Load sessions from API
-  apiFetch("/sessions")
-    .then((data) => {
-      const list = (data.sessions || []).map((s: any) => ({
-        id: s.id,
-        date: s.date,
-        time: s.time,
-        title: s.title,
-        specialist: s.specialist || undefined,
-      }));
-      setEvents(list);
-    })
-    .catch((err) => {
-      console.error(err);
-    });
-}, [router]);
-
   const selectedKey = fmtKey(date);
+
   const dayEvents = useMemo(
-    () => events.filter((e) => e.date === selectedKey).sort((a, b) => a.time.localeCompare(b.time)),
-    [events, selectedKey],
+    () =>
+      events
+        .filter((e) => e.date === selectedKey)
+        .sort((a, b) => a.time.localeCompare(b.time)),
+    [events, selectedKey]
   );
-  const dayNotes = useMemo(
-    () => notes.filter((n) => n.date === selectedKey).sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [notes, selectedKey],
-  );
+
   const daysWithEvents = useMemo(
-    () => Array.from(new Set(events.map((e) => e.date))).map((d) => new Date(d + "T00:00:00")),
-    [events],
+    () =>
+      Array.from(new Set(events.map((e) => e.date))).map(
+        (d) => new Date(d + "T12:00:00") // noon avoids timezone edge cases
+      ),
+    [events]
   );
 
-  const addEvent = (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!selectedSpecialist) return;
+  const addEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedSpecialist || isAdding) return;
 
-  setEvents((prev) => [
-    ...prev,
-    {
+    setIsAdding(true);
+
+    const newEvent: SessionEvent = {
       id: crypto.randomUUID(),
       date: selectedKey,
       time: evTime,
       title: `Session with ${selectedSpecialist}`,
       specialist: selectedSpecialist,
-    },
-  ]);
-};
+    };
 
-  const removeEvent = async (id: string) => {
-  try {
-    await apiFetch(`/sessions/${id}`, { method: "DELETE" });
-    setEvents((p) => p.filter((e) => e.id !== id));
-  } catch (err) {
-    console.error(err);
-    alert("Could not delete session");
-  }
-};
+    // Optimistic UI update (so the dot appears immediately)
+    setEvents((prev) => [...prev, newEvent]);
 
-  const addNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!noteText.trim()) return;
-    setNotes((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), date: selectedKey, createdAt: new Date().toISOString(), mood, text: noteText.trim() },
-    ]);
-    setNoteText("");
-    setMood(3);
+    try {
+      // Try to persist on the backend
+      await apiFetch("/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          date: selectedKey,
+          time: evTime,
+          title: newEvent.title,
+          specialist: selectedSpecialist,
+        }),
+      });
+    } catch (err) {
+      console.error("Could not save session to API, kept locally", err);
+      // You can decide to rollback if you want:
+      // setEvents((prev) => prev.filter((ev) => ev.id !== newEvent.id));
+    } finally {
+      setIsAdding(false);
+    }
   };
 
-  const removeNote = (id: string) => setNotes((p) => p.filter((n) => n.id !== id));
+  const removeEvent = async (id: string) => {
+    try {
+      await apiFetch(`/sessions/${id}`, { method: "DELETE" });
+      setEvents((p) => p.filter((e) => e.id !== id));
+    } catch (err) {
+      console.error(err);
+      // Still remove from UI
+      setEvents((p) => p.filter((e) => e.id !== id));
+    }
+  };
 
-  const logout = () => {
-    localStorage.removeItem("breathe.user");
-    router.navigate({ to: "/" });
+  const toggleTask = (id: string) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === id ? { ...task, done: !task.done } : task
+      )
+    );
   };
 
   const dateLabel = date.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", {
@@ -184,95 +196,206 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* Top row: Calendar + Sessions + Tasks */}
+        <div className="grid gap-6 lg:grid-cols-3 mb-6">
+          {/* 1. Calendar */}
+          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+            <h2 className="mb-4 font-display text-xl font-semibold">
+              {t("dash.calendar")}
+            </h2>
 
-          {/* Calendar */}
-              <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-1">
-                <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.calendar")}</h2>
-                
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(d) => d && setDate(d)}
-                  modifiers={{
-                    hasEvent: daysWithEvents,
-                  }}
-                  modifiersClassNames={{
-                    hasEvent: "relative bg-primary/10 text-primary font-semibold rounded-md after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
-                  }}
-                  className="mx-auto"
-                />
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={(d) => d && setDate(d)}
+              modifiers={{
+                hasEvent: daysWithEvents,
+              }}
+              modifiersClassNames={{
+                hasEvent:
+                  "relative bg-primary/10 text-primary font-semibold rounded-md after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
+              }}
+              className="mx-auto"
+            />
 
-                <p className="mt-4 text-center text-sm text-foreground/60">{dateLabel}</p>
-              </section>
-                  
-          {/* Sessions */}
-          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)] lg:col-span-2">
-            <h2 className="mb-4 font-display text-xl font-semibold">{t("dash.sessions")}</h2>
+            <p className="mt-4 text-center text-sm text-foreground/60">
+              {dateLabel}
+            </p>
+          </section>
+
+          {/* 2. Sessions + Schedule form */}
+          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+            <h2 className="mb-4 font-display text-xl font-semibold">
+              {t("dash.sessions")}
+            </h2>
 
             <SessionSpecialists />
-            
-            {/* 
-            Disable while MVP 
-            
-            //Add New Session Form 
-            <form onSubmit={addEvent} className="mb-6 grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]">
-              
-               //Specialist Dropdown 
 
-              <select
-                value={selectedSpecialist}
-                onChange={(e) => setSelectedSpecialist(e.target.value)}
-                className="rounded-xl border border-border bg-background px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            {/* Schedule new session */}
+            <form
+              onSubmit={addEvent}
+              className="mb-6 space-y-3 rounded-2xl border border-border/50 bg-background/40 p-4"
+            >
+              <p className="text-sm font-medium text-foreground">
+                Agendar sesión
+              </p>
+
+              {/* Selected date from calendar */}
+              <div className="rounded-xl bg-primary/10 px-3 py-2 text-sm">
+                <span className="text-foreground/60">Fecha seleccionada: </span>
+                <span className="font-medium text-primary">{dateLabel}</span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <select
+                  value={selectedSpecialist}
+                  onChange={(e) => setSelectedSpecialist(e.target.value)}
+                  className="rounded-xl border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {PROFESSIONALS.map((p) => (
+                    <option key={p.id} value={p.name}>
+                      {p.name}
+                    </option>
+                  ))}
+                </select>
+
+                <Input
+                  type="time"
+                  value={evTime}
+                  onChange={(e) => setEvTime(e.target.value)}
+                  className="rounded-xl"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isAdding}
+                className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
               >
-                {PROFESSIONALS.map((p) => (
-                  <option key={p.id} value={p.name}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              
-              <Input
-                type="time"
-                value={evTime}
-                onChange={(e) => setEvTime(e.target.value)}
-                className="rounded-xl sm:w-32"
-              />
-
-              <Button type="submit" className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                {t("dash.add")}
+                {isAdding ? "Agendando..." : t("dash.add")}
               </Button>
-            </form> */}
-                
+            </form>
+
+            {/* List of sessions for the selected day */}
             {dayEvents.length === 0 ? (
-              <p className="text-sm text-foreground/50">{t("dash.sessions.empty")}</p>
+              <p className="text-sm text-foreground/50">
+                {t("dash.sessions.empty")}
+              </p>
             ) : (
               <ul className="space-y-2">
                 {dayEvents.map((e) => (
-                  <li key={e.id} className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/50 px-4 py-3">
+                  <li
+                    key={e.id}
+                    className="flex items-center justify-between rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                  >
                     <div className="flex items-center gap-4">
-                      <span className="font-mono text-sm font-semibold text-primary">{e.time}</span>
+                      <span className="font-mono text-sm font-semibold text-primary">
+                        {e.time}
+                      </span>
                       <div>
                         <span className="text-foreground">{e.title}</span>
                         {e.specialist && (
-                          <p className="text-xs text-foreground/60 mt-0.5">{e.specialist}</p>
+                          <p className="text-xs text-foreground/60 mt-0.5">
+                            {e.specialist}
+                          </p>
                         )}
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => removeEvent(e.id)} className="text-foreground/50 hover:text-destructive">×</Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeEvent(e.id)}
+                      className="text-foreground/50 hover:text-destructive"
+                    >
+                      ×
+                    </Button>
                   </li>
                 ))}
               </ul>
             )}
           </section>
 
-          {/* Notes / Mood */}
-            <JournalSection
-              userId={userId}
-              userName={userName}
-              selectedDate={date}
-            />
+          {/* 3. Tasks left by the Specialist */}
+          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+            <h2 className="mb-1 font-display text-xl font-semibold">
+              Tareas del especialista
+            </h2>
+            <p className="mb-4 text-sm text-foreground/60">
+              Actividades que te dejó tu especialista
+            </p>
+
+            {tasks.length === 0 ? (
+              <p className="text-sm text-foreground/50">
+                No tienes tareas pendientes.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {tasks.map((task) => (
+                  <li
+                    key={task.id}
+                    className={`rounded-2xl border px-4 py-3 transition ${
+                      task.done
+                        ? "border-border/30 bg-background/30 opacity-60"
+                        : "border-border/50 bg-background/50"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <button
+                        type="button"
+                        onClick={() => toggleTask(task.id)}
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+                          task.done
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border hover:border-primary"
+                        }`}
+                      >
+                        {task.done && (
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            strokeWidth={3}
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        )}
+                      </button>
+
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={`text-sm font-medium ${
+                            task.done
+                              ? "line-through text-foreground/50"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {task.title}
+                        </p>
+                        {task.description && (
+                          <p className="mt-0.5 text-xs text-foreground/60">
+                            {task.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
+
+        {/* Journal (full width) */}
+        <JournalSection
+          userId={userId}
+          userName={userName}
+          selectedDate={date}
+        />
       </main>
     </div>
   );
