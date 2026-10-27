@@ -27,30 +27,58 @@ type Task = {
   createdAt: string;
 };
 
-// Roles allowed on this page. Add "PSYCHOLOGIST" here when specialists get access.
+type Resource = {
+  id: string;
+  titleEn: string;
+  titleEs: string;
+  bodyEn: string;
+  bodyEs: string;
+  minutes: number;
+  bgColor: string;
+  sortOrder: number;
+  published: boolean;
+};
+
 const ALLOWED_ROLES = ["ADMIN"];
 
 function AdminPage() {
   const { t } = useT();
   const router = useRouter();
 
+  // Patients / tasks
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientId, setPatientId] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
   const [error, setError] = useState("");
 
-  // New task form
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [saving, setSaving] = useState(false);
 
-  // Inline edit
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
 
-  // Access check + load patients.
-  // This only decides what to show; the API enforces the real permissions.
+  // Resources CMS
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [resLoading, setResLoading] = useState(false);
+  const [resError, setResError] = useState("");
+  const [resSaving, setResSaving] = useState(false);
+  const [editingResId, setEditingResId] = useState<string | null>(null);
+
+  const emptyResForm = {
+    titleEn: "",
+    titleEs: "",
+    bodyEn: "",
+    bodyEs: "",
+    minutes: 5,
+    bgColor: "var(--note-3)",
+    sortOrder: 0,
+    published: true,
+  };
+  const [resForm, setResForm] = useState(emptyResForm);
+
+  // Access check + load patients
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -74,7 +102,26 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
-  // Load the selected patient's tasks
+  // Load resources
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const raw = localStorage.getItem("breathe.user");
+    if (!raw) return;
+    const u = JSON.parse(raw);
+    if (!ALLOWED_ROLES.includes(u.role)) return;
+
+    setResLoading(true);
+    apiFetch("/content/admin/resources")
+      .then((data) => setResources(data.resources || []))
+      .catch((err) => {
+        console.error(err);
+        setResError(t("admin.error"));
+      })
+      .finally(() => setResLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Load tasks for selected patient
   useEffect(() => {
     setEditingId(null);
     if (!patientId) {
@@ -90,6 +137,7 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
+  // ── Task handlers ──
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!patientId || !newTitle.trim() || saving) return;
@@ -152,6 +200,72 @@ function AdminPage() {
     }
   };
 
+  // ── Resource handlers ──
+  const saveResource = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resForm.titleEn.trim() || !resForm.titleEs.trim() || resSaving) return;
+    setResSaving(true);
+    setResError("");
+    try {
+      if (editingResId) {
+        const data = await apiFetch(`/content/admin/resources/${editingResId}`, {
+          method: "PATCH",
+          body: JSON.stringify(resForm),
+        });
+        setResources((prev) =>
+          prev.map((r) => (r.id === editingResId ? data.resource : r))
+        );
+      } else {
+        const data = await apiFetch("/content/admin/resources", {
+          method: "POST",
+          body: JSON.stringify(resForm),
+        });
+        setResources((prev) =>
+          [...prev, data.resource].sort((a, b) => a.sortOrder - b.sortOrder)
+        );
+      }
+      setResForm(emptyResForm);
+      setEditingResId(null);
+    } catch (err) {
+      console.error(err);
+      setResError(t("admin.error"));
+    } finally {
+      setResSaving(false);
+    }
+  };
+
+  const startEditResource = (r: Resource) => {
+    setEditingResId(r.id);
+    setResForm({
+      titleEn: r.titleEn,
+      titleEs: r.titleEs,
+      bodyEn: r.bodyEn,
+      bodyEs: r.bodyEs,
+      minutes: r.minutes,
+      bgColor: r.bgColor,
+      sortOrder: r.sortOrder,
+      published: r.published,
+    });
+  };
+
+  const cancelEditResource = () => {
+    setEditingResId(null);
+    setResForm(emptyResForm);
+  };
+
+  const removeResource = async (id: string) => {
+    if (!window.confirm(t("admin.confirmDelete"))) return;
+    setResError("");
+    try {
+      await apiFetch(`/content/admin/resources/${id}`, { method: "DELETE" });
+      setResources((prev) => prev.filter((r) => r.id !== id));
+      if (editingResId === id) cancelEditResource();
+    } catch (err) {
+      console.error(err);
+      setResError(t("admin.error"));
+    }
+  };
+
   const patientLabel = (p: Patient) =>
     `${p.firstName}${p.lastName ? " " + p.lastName : ""} (${p.email})`;
 
@@ -197,7 +311,6 @@ function AdminPage() {
 
         {patientId && (
           <>
-            {/* New task */}
             <form
               onSubmit={addTask}
               className="mb-6 space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
@@ -226,7 +339,6 @@ function AdminPage() {
               </Button>
             </form>
 
-            {/* Task list */}
             <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
               {tasks.length === 0 ? (
                 <p className="text-sm text-foreground/50">
@@ -313,6 +425,190 @@ function AdminPage() {
             </section>
           </>
         )}
+
+        {/* ── Resources CMS ── */}
+        <section className="mt-12">
+          <h2 className="font-display text-3xl font-semibold text-foreground">
+            Resources
+          </h2>
+          <p className="mt-1 mb-6 text-sm text-foreground/60">
+            Edit the cards shown on the Resources page (EN + ES).
+          </p>
+
+          {resError && (
+            <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
+              {resError}
+            </p>
+          )}
+
+          <form
+            onSubmit={saveResource}
+            className="mb-6 space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
+          >
+            <h3 className="font-display text-xl font-semibold">
+              {editingResId ? "Edit resource" : "New resource"}
+            </h3>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <Input
+                value={resForm.titleEn}
+                onChange={(e) =>
+                  setResForm({ ...resForm, titleEn: e.target.value })
+                }
+                placeholder="Title (English)"
+                className="rounded-xl"
+                required
+              />
+              <Input
+                value={resForm.titleEs}
+                onChange={(e) =>
+                  setResForm({ ...resForm, titleEs: e.target.value })
+                }
+                placeholder="Título (Español)"
+                className="rounded-xl"
+                required
+              />
+            </div>
+
+            <Textarea
+              value={resForm.bodyEn}
+              onChange={(e) =>
+                setResForm({ ...resForm, bodyEn: e.target.value })
+              }
+              placeholder="Body (English)"
+              className="rounded-xl min-h-24"
+              required
+            />
+            <Textarea
+              value={resForm.bodyEs}
+              onChange={(e) =>
+                setResForm({ ...resForm, bodyEs: e.target.value })
+              }
+              placeholder="Cuerpo (Español)"
+              className="rounded-xl min-h-24"
+              required
+            />
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Input
+                type="number"
+                min={1}
+                max={60}
+                value={resForm.minutes}
+                onChange={(e) =>
+                  setResForm({
+                    ...resForm,
+                    minutes: Number(e.target.value) || 5,
+                  })
+                }
+                placeholder="Minutes"
+                className="rounded-xl"
+              />
+              <select
+                value={resForm.bgColor}
+                onChange={(e) =>
+                  setResForm({ ...resForm, bgColor: e.target.value })
+                }
+                className="h-10 rounded-xl border border-border bg-background px-3 text-sm"
+              >
+                <option value="var(--note-1)">Soft blue</option>
+                <option value="var(--note-2)">Peach</option>
+                <option value="var(--note-3)">Sky</option>
+                <option value="var(--note-4)">Lavender</option>
+              </select>
+              <Input
+                type="number"
+                value={resForm.sortOrder}
+                onChange={(e) =>
+                  setResForm({
+                    ...resForm,
+                    sortOrder: Number(e.target.value) || 0,
+                  })
+                }
+                placeholder="Sort order"
+                className="rounded-xl"
+              />
+            </div>
+
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={resForm.published}
+                onChange={(e) =>
+                  setResForm({ ...resForm, published: e.target.checked })
+                }
+              />
+              Published
+            </label>
+
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                disabled={resSaving}
+                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {editingResId ? t("admin.save") : "Add resource"}
+              </Button>
+              {editingResId && (
+                <Button type="button" variant="ghost" onClick={cancelEditResource}>
+                  {t("admin.cancel")}
+                </Button>
+              )}
+            </div>
+          </form>
+
+          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+            {resLoading ? (
+              <p className="text-sm text-foreground/50">…</p>
+            ) : resources.length === 0 ? (
+              <p className="text-sm text-foreground/50">
+                No resources yet. Add the first one above.
+              </p>
+            ) : (
+              <ul className="space-y-3">
+                {resources.map((r) => (
+                  <li
+                    key={r.id}
+                    className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-foreground">
+                          {r.titleEn}
+                          {!r.published && (
+                            <span className="ml-2 text-xs text-foreground/40">
+                              (draft)
+                            </span>
+                          )}
+                        </p>
+                        <p className="mt-0.5 text-xs text-foreground/60">
+                          {r.titleEs} · {r.minutes} min · order {r.sortOrder}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => startEditResource(r)}
+                        >
+                          {t("admin.edit")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeResource(r.id)}
+                          className="text-foreground/50 hover:text-destructive"
+                        >
+                          {t("admin.delete")}
+                        </Button>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </section>
       </main>
     </div>
   );

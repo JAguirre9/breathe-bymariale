@@ -168,8 +168,8 @@ const dict: Dict = {
 },
 
 "intake.success.subtitle": {
-  en: "We've received your information. Our team will contact you soon to schedule your first session. Once you're accepted as a patient, you'll receive access to your Breathe account.",
-  es: "Hemos recibido tu información. Nuestro equipo se pondrá en contacto contigo para programar tu primera sesión. Una vez seas aceptado como paciente, recibirás acceso a tu cuenta de Breathe."
+  en: "We've received your information. Our team will contact you within the next 24 hours to schedule your first session. Thank you for making this first step 💜",
+  es: "Hemos recibido tu información. Nuestro equipo se pondrá en contacto contigo dentro de las siguientes 24 horaspara programar tu primera sesión. Gracias por dar este primer paso 💜"
 },
 
 "intake.psychologist.success.title": {
@@ -407,7 +407,7 @@ const dict: Dict = {
   "admin.confirmDelete": { en: "Delete this task?", es: "¿Eliminar esta tarea?" },
   "admin.done": { en: "Completed", es: "Completada" },
   "admin.error": { en: "Something went wrong. Please try again.", es: "Algo salió mal. Inténtalo de nuevo." },
-  
+
   //JournalSection
   "js.loadJournal": { en: "Loading journal...", es: "Cargando tu diario..." },
   "js.journal.title" : {en: "{{name}}'s Journal", es: "Diario de {{name}}"},
