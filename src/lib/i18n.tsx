@@ -48,6 +48,32 @@ const dict: Dict = {
   },
   "mod.discover": { en: "Discover →", es: "Descubrir →" },
 
+  "merch.empty": { en: "New pieces are coming soon.", es: "Pronto habrá nuevas piezas." },
+  "merch.error": { en: "We couldn't load the merch right now.", es: "No pudimos cargar la tienda en este momento." },
+  "merch.close": { en: "Close", es: "Cerrar" },
+
+  // Admin: merch editor
+  "admin.merch.title": { en: "Merch", es: "Tienda" },
+  "admin.merch.nameEn": { en: "Name (English)", es: "Nombre (inglés)" },
+  "admin.merch.nameEs": { en: "Name (Spanish)", es: "Nombre (español)" },
+  "admin.merch.captionEn": { en: "Short text (English)", es: "Texto corto (inglés)" },
+  "admin.merch.captionEs": { en: "Short text (Spanish)", es: "Texto corto (español)" },
+  "admin.merch.imageUrl": { en: "Image link", es: "Enlace de la imagen" },
+  "admin.merch.imageHint": { en: "Paste a link that starts with https://", es: "Pega un enlace que empiece con https://" },
+  "admin.merch.sortOrder": { en: "Order", es: "Orden" },
+  "admin.merch.published": { en: "Visible on the site", es: "Visible en el sitio" },
+  "admin.merch.add": { en: "Add item", es: "Añadir artículo" },
+  "admin.merch.save": { en: "Save changes", es: "Guardar cambios" },
+  "admin.merch.cancel": { en: "Cancel", es: "Cancelar" },
+  "admin.merch.edit": { en: "Edit", es: "Editar" },
+  "admin.merch.delete": { en: "Delete", es: "Eliminar" },
+  "admin.merch.hide": { en: "Hide", es: "Ocultar" },
+  "admin.merch.show": { en: "Show", es: "Mostrar" },
+  "admin.merch.hidden": { en: "Hidden", es: "Oculto" },
+  "admin.merch.empty": { en: "No merch items yet.", es: "Aún no hay artículos." },
+  "admin.merch.confirmDelete": { en: "Delete this item?", es: "¿Eliminar este artículo?" },
+  "admin.merch.error": { en: "Something went wrong. Please try again.", es: "Algo salió mal. Inténtalo de nuevo." },
+
   // Services
   "svc.title1": { en: "Care,", es: "Cuidado," },
   "svc.title2": { en: "your way.", es: "a tu manera." },

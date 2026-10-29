@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
+import { MerchEditor } from "@/components/admin/MerchEditor";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin - Breathe" }] }),
@@ -724,6 +725,11 @@ function AdminPage() {
               </ul>
             )}
           </section>
+        </section>
+
+        {/* Merch CMS */}
+        <section className="mt-12">
+          <MerchEditor />
         </section>
       </main>
     </div>
