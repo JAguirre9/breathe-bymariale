@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { apiFetch } from "@/lib/api";
+import { API_URL, apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
 export const Route = createFileRoute("/merch")({
@@ -31,6 +31,12 @@ const FALLBACK_COLORS = [
   "var(--note-3)",
   "var(--note-1)",
 ];
+
+function fullImageUrl(url: string | null) {
+  if (!url) return null;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_URL}${url.startsWith("/") ? url : `/${url}`}`;
+}
 
 function Merch() {
   const { t, lang } = useT();
@@ -112,10 +118,9 @@ function Merch() {
                 >
                   {item.imageUrl ? (
                     <img
-                      src={item.imageUrl}
+                      src={fullImageUrl(item.imageUrl)!}
                       alt={name}
                       loading="lazy"
-                      referrerPolicy="no-referrer"
                       className="aspect-square w-full rounded-2xl object-cover"
                     />
                   ) : (

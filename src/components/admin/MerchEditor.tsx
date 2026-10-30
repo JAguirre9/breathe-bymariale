@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { apiFetch } from "@/lib/api";
+import { API_URL, apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 
 type MerchItem = {
@@ -36,12 +36,20 @@ const emptyForm: FormState = {
   published: true,
 };
 
+/** Turn /uploads/... into a full URL the browser can load */
+function fullImageUrl(url: string | null | undefined) {
+  if (!url) return "";
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  return `${API_URL}${url.startsWith("/") ? url : `/${url}`}`;
+}
+
 export function MerchEditor() {
   const { t, lang } = useT();
   const [items, setItems] = useState<MerchItem[]>([]);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
 
   const load = () =>
@@ -76,6 +84,35 @@ export function MerchEditor() {
       sortOrder: String(item.sortOrder),
       published: item.published,
     });
+  };
+
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setError("");
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+
+      const res = await fetch(`${API_URL}/content/admin/merch/upload`, {
+        method: "POST",
+        credentials: "include",
+        body, // do NOT set Content-Type; browser sets multipart boundary
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || "Upload failed");
+      }
+      set("imageUrl", data.imageUrl as string);
+    } catch (err) {
+      console.error(err);
+      setError(t("admin.merch.error"));
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
   const submit = async (e: React.FormEvent) => {
@@ -143,6 +180,8 @@ export function MerchEditor() {
     }
   };
 
+  const previewSrc = fullImageUrl(form.imageUrl);
+
   return (
     <section className="mb-6 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
       <h2 className="font-display text-xl font-semibold">{t("admin.merch.title")}</h2>
@@ -153,7 +192,6 @@ export function MerchEditor() {
         </p>
       )}
 
-      {/* Add / edit form */}
       <form onSubmit={submit} className="mt-4 space-y-3">
         <div className="grid gap-3 sm:grid-cols-2">
           <Input
@@ -182,19 +220,31 @@ export function MerchEditor() {
           />
         </div>
 
+        {/* Photo from laptop */}
         <div>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
+            {lang === "es" ? "Foto del producto" : "Product photo"}
+          </label>
           <Input
-            value={form.imageUrl}
-            onChange={(e) => set("imageUrl", e.target.value)}
-            placeholder={t("admin.merch.imageUrl")}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+            onChange={onFileChange}
+            disabled={uploading}
             className="rounded-xl"
           />
-          <p className="mt-1 text-xs text-foreground/50">{t("admin.merch.imageHint")}</p>
-          {form.imageUrl.startsWith("https://") && (
+          <p className="mt-1 text-xs text-foreground/50">
+            {uploading
+              ? lang === "es"
+                ? "Subiendo…"
+                : "Uploading…"
+              : lang === "es"
+                ? "JPEG, PNG, WebP o GIF · máximo 5 MB"
+                : "JPEG, PNG, WebP or GIF · max 5 MB"}
+          </p>
+          {previewSrc && (
             <img
-              src={form.imageUrl}
+              src={previewSrc}
               alt=""
-              referrerPolicy="no-referrer"
               className="mt-2 h-24 w-24 rounded-xl object-cover"
             />
           )}
@@ -223,7 +273,7 @@ export function MerchEditor() {
         <div className="flex gap-2">
           <Button
             type="submit"
-            disabled={saving || !form.nameEn.trim() || !form.nameEs.trim()}
+            disabled={saving || uploading || !form.nameEn.trim() || !form.nameEs.trim()}
             className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
           >
             {editingId ? t("admin.merch.save") : t("admin.merch.add")}
@@ -236,7 +286,6 @@ export function MerchEditor() {
         </div>
       </form>
 
-      {/* Existing items */}
       <div className="mt-6">
         {items.length === 0 ? (
           <p className="text-sm text-foreground/50">{t("admin.merch.empty")}</p>
@@ -249,9 +298,8 @@ export function MerchEditor() {
               >
                 {item.imageUrl ? (
                   <img
-                    src={item.imageUrl}
+                    src={fullImageUrl(item.imageUrl)}
                     alt=""
-                    referrerPolicy="no-referrer"
                     className="h-12 w-12 shrink-0 rounded-lg object-cover"
                   />
                 ) : (
@@ -262,7 +310,9 @@ export function MerchEditor() {
                     {lang === "es" ? item.nameEs : item.nameEn}
                   </p>
                   {!item.published && (
-                    <p className="text-xs text-foreground/50">{t("admin.merch.hidden")}</p>
+                    <p className="text-xs text-foreground/50">
+                      {t("admin.merch.hidden")}
+                    </p>
                   )}
                 </div>
                 <div className="flex shrink-0 gap-1">
