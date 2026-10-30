@@ -8,7 +8,7 @@ export const Route = createFileRoute("/privacy")({
 });
 
 // TODO before launch: replace the email
-const CONTACT_EMAIL = "hello@your-domain.com";
+const CONTACT_EMAIL = "breathe.bymariale@gmail.com";
 const LAST_UPDATED = "October 29, 2026";
 
 const EN = [
