@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { JournalSection } from "@/components/dashboard/JournalSection";
 import { SessionSpecialists } from "@/components/dashboard/SessionSpecialists";
+import { ChangePassword } from "@/components/dashboard/ChangePassword";
 
 const PROFESSIONALS = [
   { id: "mariale", name: "Mariale Marulanda", role: "Founder & Specialist" },
@@ -419,6 +420,9 @@ function Dashboard() {
           userName={userName}
           selectedDate={date}
         />
+                <div className="mt-6">
+          <ChangePassword />
+        </div>
       </main>
     </div>
   );
