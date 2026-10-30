@@ -7,7 +7,7 @@ export const Route = createFileRoute("/privacy")({
   component: PrivacyPage,
 });
 
-// TODO before launch: replace these two values
+// TODO before launch: replace the email
 const CONTACT_EMAIL = "hello@your-domain.com";
 const LAST_UPDATED = "October 29, 2026";
 
@@ -37,6 +37,21 @@ const EN = [
     p: [
       "Your journal, sessions and tasks are visible to you and to the Breathe administrator/specialist who provides your care, so they can follow your progress. No other patient can see your information.",
       "We only share information with service providers that run the app for us (such as hosting and database providers), under the purpose of operating the service, or when the law requires it.",
+    ],
+  },
+  {
+    h: "Professional secrecy and Colombian Law 1090 of 2006",
+    p: [
+      "Psychological care at Breathe is provided under the ethical and legal framework of Law 1090 of 2006 (Código Deontológico y Ético del Psicólogo in Colombia).",
+      "Under that law, information shared in the therapeutic relationship is protected by professional secrecy. The psychologist must keep confidential what they learn in the exercise of their profession, except in the limited cases allowed by law (for example, serious and imminent risk to the life of the person or of others, or when a competent authority lawfully requires it).",
+      "Journal entries and clinical notes in the platform are treated as confidential material of the care process and are accessed only by you and by the professional responsible for your care, for the purpose of accompanying your process.",
+      "This does not replace the full text of Law 1090 of 2006; it states how Breathe applies its principles of confidentiality and professional responsibility in this digital service.",
+    ],
+  },
+  {
+    h: "Personal data (Colombian Law 1581 of 2012)",
+    p: [
+      "The processing of your personal data is also guided by Law 1581 of 2012 and its regulations on personal data protection in Colombia. You may exercise your rights of access, update, rectification and deletion by writing to the contact email below.",
     ],
   },
   {
@@ -97,6 +112,21 @@ const ES = [
     p: [
       "Tu diario, sesiones y tareas son visibles para ti y para la administradora/especialista de Breathe que te acompaña, con el fin de dar seguimiento a tu proceso. Ningún otro paciente puede ver tu información.",
       "Solo compartimos información con proveedores que operan la app por nosotros (como alojamiento y base de datos), para el funcionamiento del servicio, o cuando la ley lo exija.",
+    ],
+  },
+  {
+    h: "Secreto profesional y Ley 1090 de 2006",
+    p: [
+      "La atención psicológica en Breathe se presta bajo el marco ético y legal de la Ley 1090 de 2006 (Código Deontológico y Ético del Psicólogo en Colombia).",
+      "De acuerdo con esa ley, la información compartida en la relación terapéutica está protegida por el secreto profesional. El psicólogo debe guardar la confidencialidad de lo que conoce en el ejercicio de su profesión, salvo en los casos limitados que la ley permite (por ejemplo, riesgo grave e inminente para la vida de la persona o de terceros, o cuando una autoridad competente lo requiera de forma legítima).",
+      "Las entradas del diario y el material clínico en la plataforma se tratan como información confidencial del proceso de atención y solo pueden ser consultados por ti y por el profesional responsable de tu cuidado, con el fin de acompañar tu proceso.",
+      "Esto no reemplaza el texto completo de la Ley 1090 de 2006; indica cómo Breathe aplica sus principios de confidencialidad y responsabilidad profesional en este servicio digital.",
+    ],
+  },
+  {
+    h: "Datos personales (Ley 1581 de 2012)",
+    p: [
+      "El tratamiento de tus datos personales también se orienta por la Ley 1581 de 2012 y su normativa sobre protección de datos personales en Colombia. Puedes ejercer tus derechos de acceso, actualización, rectificación y eliminación escribiendo al correo de contacto indicado abajo.",
     ],
   },
   {
