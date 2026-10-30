@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { MerchEditor } from "@/components/admin/MerchEditor";
+import { PendingPatients } from "@/components/admin/PendingPatients";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin - Breathe" }] }),
@@ -55,7 +56,6 @@ function AdminPage() {
   const { t } = useT();
   const router = useRouter();
 
-  // Patients / tasks
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientId, setPatientId] = useState("");
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -69,12 +69,10 @@ function AdminPage() {
   const [editTitle, setEditTitle] = useState("");
   const [editDesc, setEditDesc] = useState("");
 
-  //Patient journal read-only 
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [journalLoading, setJournalLoading] = useState(false);
   const [activeJournalId, setActiveJournalId] = useState<string | null>(null);
 
-  // Resources CMS
   const [resources, setResources] = useState<Resource[]>([]);
   const [resLoading, setResLoading] = useState(false);
   const [resError, setResError] = useState("");
@@ -93,7 +91,7 @@ function AdminPage() {
   };
   const [resForm, setResForm] = useState(emptyResForm);
 
-  // Access check + load patients
+  // Access check + load active patients
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -136,8 +134,8 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load tasks for selected patient
-    useEffect(() => {
+  // Load tasks + journal when a patient is selected
+  useEffect(() => {
     setEditingId(null);
     setActiveJournalId(null);
 
@@ -147,7 +145,6 @@ function AdminPage() {
       return;
     }
 
-    // Tasks
     apiFetch(`/tasks/patient/${patientId}`)
       .then((data) => setTasks(data.tasks || []))
       .catch((err) => {
@@ -155,7 +152,6 @@ function AdminPage() {
         setError(t("admin.error"));
       });
 
-    // Journal
     setJournalLoading(true);
     apiFetch(`/admin/patients/${patientId}/journal`)
       .then((data) => {
@@ -171,7 +167,6 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
-  // ── Task handlers ──
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!patientId || !newTitle.trim() || saving) return;
@@ -234,7 +229,6 @@ function AdminPage() {
     }
   };
 
-  // ── Resource handlers ──
   const saveResource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resForm.titleEn.trim() || !resForm.titleEs.trim() || resSaving) return;
@@ -303,7 +297,7 @@ function AdminPage() {
   const patientLabel = (p: Patient) =>
     `${p.firstName}${p.lastName ? " " + p.lastName : ""} (${p.email})`;
 
-    return (
+  return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
       <main className="mx-auto max-w-6xl px-6 pt-32 pb-20">
@@ -320,8 +314,17 @@ function AdminPage() {
           </p>
         )}
 
-        {/* Patient picker */}
-        <section className="mb-6 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+        {/* Pending intakes */}
+        <PendingPatients
+          onActivated={() =>
+            apiFetch("/admin/patients")
+              .then((data) => setPatients(data.patients || []))
+              .catch(console.error)
+          }
+        />
+
+        {/* Active patient picker */}
+        <section className="mb-6 mt-8 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
           <label className="mb-2 block text-sm font-medium text-foreground">
             {t("admin.patient")}
           </label>
@@ -343,6 +346,7 @@ function AdminPage() {
           )}
         </section>
 
+        {/* Tasks + Journal side by side */}
         {patientId && (
           <div className="mb-12 grid gap-6 lg:grid-cols-2">
             {/* Left: Tasks */}
@@ -461,11 +465,13 @@ function AdminPage() {
               </section>
             </div>
 
-            {/* Right: Journal */}
+            {/* Right: Journal (read-only) */}
             <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-              <h2 className="font-display text-xl font-semibold">{t("journal.title")}</h2>
+              <h2 className="font-display text-xl font-semibold">
+                {t("journal.title")}
+              </h2>
               <p className="mt-1 mb-4 text-sm text-foreground/60">
-                {t("journal.read.only")}
+                What this patient has written (read-only).
               </p>
 
               {journalLoading ? (
@@ -667,7 +673,11 @@ function AdminPage() {
                 {editingResId ? t("admin.save") : "Add resource"}
               </Button>
               {editingResId && (
-                <Button type="button" variant="ghost" onClick={cancelEditResource}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={cancelEditResource}
+                >
                   {t("admin.cancel")}
                 </Button>
               )}

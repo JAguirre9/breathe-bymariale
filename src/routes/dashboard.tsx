@@ -58,7 +58,7 @@ function Dashboard() {
   );
   const [isAdding, setIsAdding] = useState(false);
 
-  // Load user + sessions
+  // Load user + sessions + tasks (runs once)
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -86,9 +86,8 @@ function Dashboard() {
       .catch((err) => {
         console.error(err);
       });
-  }, [router]);
 
-      apiFetch("/tasks")
+    apiFetch("/tasks")
       .then((data) => {
         const list = (data.tasks || []).map((tk: any) => ({
           id: tk.id,
@@ -102,6 +101,7 @@ function Dashboard() {
       .catch((err) => {
         console.error(err);
       });
+  }, [router]);
 
   const selectedKey = fmtKey(date);
 
@@ -127,8 +127,9 @@ function Dashboard() {
 
     setIsAdding(true);
 
+    const tempId = crypto.randomUUID();
     const newEvent: SessionEvent = {
-      id: crypto.randomUUID(),
+      id: tempId,
       date: selectedKey,
       time: evTime,
       title: `Session with ${selectedSpecialist}`,
@@ -139,8 +140,8 @@ function Dashboard() {
     setEvents((prev) => [...prev, newEvent]);
 
     try {
-      // Try to persist on the backend
-      await apiFetch("/sessions", {
+      // Persist on the backend
+      const data = await apiFetch("/sessions", {
         method: "POST",
         body: JSON.stringify({
           date: selectedKey,
@@ -149,10 +150,18 @@ function Dashboard() {
           specialist: selectedSpecialist,
         }),
       });
+
+      // Swap the temporary id for the real one, so deleting works right away
+      const savedId = data.session?.id;
+      if (savedId) {
+        setEvents((prev) =>
+          prev.map((ev) => (ev.id === tempId ? { ...ev, id: savedId } : ev))
+        );
+      }
     } catch (err) {
-      console.error("Could not save session to API, kept locally", err);
-      // You can decide to rollback if you want:
-      // setEvents((prev) => prev.filter((ev) => ev.id !== newEvent.id));
+      console.error("Could not save session", err);
+      // Roll back, so the calendar never shows a session that wasn't saved
+      setEvents((prev) => prev.filter((ev) => ev.id !== tempId));
     } finally {
       setIsAdding(false);
     }
@@ -164,12 +173,10 @@ function Dashboard() {
       setEvents((p) => p.filter((e) => e.id !== id));
     } catch (err) {
       console.error(err);
-      // Still remove from UI
-      setEvents((p) => p.filter((e) => e.id !== id));
     }
   };
 
-    const toggleTask = async (id: string) => {
+  const toggleTask = async (id: string) => {
     const current = tasks.find((task) => task.id === id);
     if (!current) return;
     const nextDone = !current.done;
@@ -337,7 +344,7 @@ function Dashboard() {
               {t("dash.tasks.title")}
             </h2>
             <p className="mb-4 text-sm text-foreground/60">
-            {t("dash.tasks.subtitle")}
+              {t("dash.tasks.subtitle")}
             </p>
 
             {tasks.length === 0 ? (

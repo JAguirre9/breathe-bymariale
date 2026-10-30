@@ -1,7 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { SiteHeader } from "@/components/SiteHeader";
+import { Button } from "@/components/ui/button";
+import { useT } from "@/lib/i18n";
 
 import { RoleSelection } from "@/components/signup/RoleSelection";
 import { PatientForm } from "@/components/signup/PatientForm";
@@ -26,6 +28,12 @@ export const Route = createFileRoute("/signup")({
 });
 
 function SignupPage() {
+  const { lang } = useT();
+  const es = lang === "es";
+
+  // Patients must accept the privacy policy before filling the form
+  const [consented, setConsented] = useState(false);
+
   const [selectedRole, setSelectedRole] =
     useState<UserRole | null>(null);
 
@@ -124,7 +132,15 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
               />
             )}
 
-            {selectedRole === "PATIENT" && (
+            {selectedRole === "PATIENT" && !consented && (
+              <ConsentStep
+                es={es}
+                onAccept={() => setConsented(true)}
+                onBack={() => setSelectedRole(null)}
+              />
+            )}
+
+            {selectedRole === "PATIENT" && consented && (
               <PatientForm
                 intake={intake}
                 setIntake={setIntake}
@@ -147,6 +163,67 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
         )}
 
       </main>
+    </div>
+  );
+}
+
+function ConsentStep({
+  es,
+  onAccept,
+  onBack,
+}: {
+  es: boolean;
+  onAccept: () => void;
+  onBack: () => void;
+}) {
+  const [checked, setChecked] = useState(false);
+
+  return (
+    <div className="mx-auto max-w-xl rounded-3xl bg-card p-8 shadow-[var(--shadow-card)]">
+      <h2 className="font-display text-2xl font-semibold text-foreground">
+        {es ? "Antes de empezar" : "Before we begin"}
+      </h2>
+      <p className="mt-3 text-sm leading-relaxed text-foreground/70">
+        {es
+          ? "Vamos a guardar tus datos personales y lo que escribas en tu diario para acompañar tu proceso. Tu especialista podrá verlos; ningún otro paciente."
+          : "We will store your personal details and what you write in your journal to support your care. Your specialist can see them; no other patient can."}
+      </p>
+
+      <label className="mt-5 flex cursor-pointer items-start gap-3 text-sm text-foreground">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => setChecked(e.target.checked)}
+          className="mt-1 h-4 w-4 accent-[var(--primary)]"
+        />
+        <span>
+          {es ? "He leído y acepto la " : "I have read and accept the "}
+          <Link
+            to="/privacy"
+            target="_blank"
+            className="font-medium text-primary underline"
+          >
+            {es ? "Política de privacidad" : "Privacy Policy"}
+          </Link>
+          {es
+            ? " y autorizo el tratamiento de mis datos."
+            : " and consent to the processing of my data."}
+        </span>
+      </label>
+
+      <div className="mt-6 flex gap-3">
+        <Button type="button" variant="ghost" className="rounded-full" onClick={onBack}>
+          {es ? "Atrás" : "Back"}
+        </Button>
+        <Button
+          type="button"
+          disabled={!checked}
+          onClick={onAccept}
+          className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          {es ? "Continuar" : "Continue"}
+        </Button>
+      </div>
     </div>
   );
 }
