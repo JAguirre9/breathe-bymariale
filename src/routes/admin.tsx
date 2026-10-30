@@ -50,6 +50,15 @@ type JournalEntry = {
   createdAt: string;
 };
 
+type PatientSession = {
+  id: string;
+  date: string;
+  time: string;
+  title: string;
+  specialist: string | null;
+  createdAt: string;
+};
+
 const ALLOWED_ROLES = ["ADMIN"];
 
 function AdminPage() {
@@ -72,6 +81,9 @@ function AdminPage() {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [journalLoading, setJournalLoading] = useState(false);
   const [activeJournalId, setActiveJournalId] = useState<string | null>(null);
+
+  const [sessions, setSessions] = useState<PatientSession[]>([]);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
 
   const [resources, setResources] = useState<Resource[]>([]);
   const [resLoading, setResLoading] = useState(false);
@@ -134,7 +146,7 @@ function AdminPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Load tasks + journal when a patient is selected
+  // Load tasks + journal + sessions when a patient is selected
   useEffect(() => {
     setEditingId(null);
     setActiveJournalId(null);
@@ -142,6 +154,7 @@ function AdminPage() {
     if (!patientId) {
       setTasks([]);
       setJournalEntries([]);
+      setSessions([]);
       return;
     }
 
@@ -164,6 +177,15 @@ function AdminPage() {
         setError(t("admin.error"));
       })
       .finally(() => setJournalLoading(false));
+
+    setSessionsLoading(true);
+    apiFetch(`/admin/patients/${patientId}/sessions`)
+      .then((data) => setSessions(data.sessions || []))
+      .catch((err) => {
+        console.error(err);
+        setError(t("admin.error"));
+      })
+      .finally(() => setSessionsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
 
@@ -314,7 +336,6 @@ function AdminPage() {
           </p>
         )}
 
-        {/* Pending intakes */}
         <PendingPatients
           onActivated={() =>
             apiFetch("/admin/patients")
@@ -323,7 +344,6 @@ function AdminPage() {
           }
         />
 
-        {/* Active patient picker */}
         <section className="mb-6 mt-8 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
           <label className="mb-2 block text-sm font-medium text-foreground">
             {t("admin.patient")}
@@ -346,10 +366,9 @@ function AdminPage() {
           )}
         </section>
 
-        {/* Tasks + Journal side by side */}
         {patientId && (
-          <div className="mb-12 grid gap-6 lg:grid-cols-2">
-            {/* Left: Tasks */}
+          <div className="mb-12 grid gap-6 lg:grid-cols-3">
+            {/* Tasks */}
             <div className="space-y-6">
               <form
                 onSubmit={addTask}
@@ -465,7 +484,7 @@ function AdminPage() {
               </section>
             </div>
 
-            {/* Right: Journal (read-only) */}
+            {/* Journal */}
             <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
               <h2 className="font-display text-xl font-semibold">
                 {t("journal.title")}
@@ -477,9 +496,7 @@ function AdminPage() {
               {journalLoading ? (
                 <p className="text-sm text-foreground/50">…</p>
               ) : journalEntries.length === 0 ? (
-                <p className="text-sm text-foreground/50">
-                  {t("journal.empty")}
-                </p>
+                <p className="text-sm text-foreground/50">{t("journal.empty")}</p>
               ) : (
                 <div className="flex flex-col gap-4">
                   <ul className="max-h-48 space-y-2 overflow-y-auto">
@@ -544,6 +561,50 @@ function AdminPage() {
                     })()}
                   </div>
                 </div>
+              )}
+            </section>
+
+            {/* Sessions */}
+            <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
+              <h2 className="font-display text-xl font-semibold">Sessions</h2>
+              <p className="mt-1 mb-4 text-sm text-foreground/60">
+                Appointments this patient has scheduled.
+              </p>
+
+              {sessionsLoading ? (
+                <p className="text-sm text-foreground/50">…</p>
+              ) : sessions.length === 0 ? (
+                <p className="text-sm text-foreground/50">
+                  No sessions scheduled yet.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {sessions.map((s) => (
+                    <li
+                      key={s.id}
+                      className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">
+                            {s.date} · {s.time}
+                          </p>
+                          <p className="mt-0.5 text-sm text-foreground/80">
+                            {s.title}
+                          </p>
+                          {s.specialist && (
+                            <p className="mt-0.5 text-xs text-foreground/50">
+                              {s.specialist}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <p className="mt-1 text-xs text-foreground/40">
+                        Booked {new Date(s.createdAt).toLocaleString()}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
               )}
             </section>
           </div>
@@ -737,7 +798,6 @@ function AdminPage() {
           </section>
         </section>
 
-        {/* Merch CMS */}
         <section className="mt-12">
           <MerchEditor />
         </section>
