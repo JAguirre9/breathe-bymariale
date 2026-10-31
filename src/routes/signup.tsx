@@ -46,7 +46,7 @@ function SignupPage() {
   const [intake, setIntake] =
     useState<SignupIntake>(defaultSignupIntake);
 
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+  const API_URL = import.meta.env.VITE_API_URL || "https://api.breathecol.com";
 
 async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
   e.preventDefault();

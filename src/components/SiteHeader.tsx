@@ -14,7 +14,7 @@ export function SiteHeader() {
     role?: string;
   } | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3001";
+  const API_URL = import.meta.env.VITE_API_URL || "https://api.breathecol.com";
 
   useEffect(() => {
     if (typeof window === "undefined") return;
