@@ -32,9 +32,15 @@ const FALLBACK_COLORS = [
   "var(--note-1)",
 ];
 
-function fullImageUrl(url: string | null) {
-  if (!url) return null;
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+function fullImageUrl(url: string | null | undefined) {
+  if (!url) return "";
+  if (
+    url.startsWith("data:") ||
+    url.startsWith("http://") ||
+    url.startsWith("https://")
+  ) {
+    return url;
+  }
   return `${API_URL}${url.startsWith("/") ? url : `/${url}`}`;
 }
 
