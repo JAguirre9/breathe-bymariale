@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader } from "@/components/SiteHeader";
 import { useT } from "@/lib/i18n";
+import { servicePrices } from "@/data/servicePrices";
 
 export const Route = createFileRoute("/services")({
   head: () => ({
@@ -13,13 +14,14 @@ export const Route = createFileRoute("/services")({
 });
 
 function Services() {
-  const { t } = useT();
-  const services = [
-    { titleKey: "svc.individual", copyKey: "svc.individual.copy", bg: "var(--note-4)" },
-    { titleKey: "svc.couples", copyKey: "svc.couples.copy", bg: "var(--note-2)" },
-    { titleKey: "svc.group", copyKey: "svc.group.copy", bg: "var(--note-3)" },
-    { titleKey: "svc.mindful", copyKey: "svc.mindful.copy", bg: "var(--note-1)" },
-  ] as const;
+  const { t, lang } = useT();
+
+  const formatPrice = (value: number) =>
+    new Intl.NumberFormat(lang === "es" ? "es-CO" : "en-US", {
+      style: "currency",
+      currency: "COP",
+      maximumFractionDigits: 0,
+    }).format(value);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
@@ -29,11 +31,23 @@ function Services() {
           {t("svc.title1")} <span className="italic text-primary">{t("svc.title2")}</span>
         </h1>
         <p className="mt-4 max-w-xl text-foreground/70">{t("svc.subtitle")}</p>
+
         <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2">
-          {services.map((s) => (
-            <div key={s.titleKey} className="rounded-3xl p-10" style={{ backgroundColor: s.bg }}>
+          {servicePrices.map((s) => (
+            <div key={s.id} className="rounded-3xl p-10" style={{ backgroundColor: s.bg }}>
               <h3 className="font-display text-3xl text-foreground">{t(s.titleKey)}</h3>
               <p className="mt-3 text-foreground/70">{t(s.copyKey)}</p>
+
+              <div className="mt-6 flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-2xl font-semibold text-foreground">
+                    {formatPrice(s.price)}
+                  </p>
+                  {s.duration && (
+                    <p className="mt-1 text-sm text-foreground/60">{s.duration}</p>
+                  )}
+                </div>
+              </div>
             </div>
           ))}
         </div>

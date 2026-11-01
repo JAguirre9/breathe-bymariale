@@ -500,7 +500,7 @@ type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (key: TKey) => string };
 const LanguageContext = createContext<Ctx | null>(null);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
+  const [lang, setLangState] = useState<Lang>("es");
 
   useEffect(() => {
     const saved = (typeof window !== "undefined" && localStorage.getItem("breathe.lang")) as Lang | null;

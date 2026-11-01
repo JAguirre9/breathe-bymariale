@@ -91,6 +91,34 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <LanguageToggle />
 
+          {/* Instagram */}
+          <a
+            href="https://www.instagram.com/breathe.bymariale"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Instagram"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-foreground/70 transition-colors hover:bg-accent hover:text-foreground"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+            </svg>
+          </a>
+
+          {/* Desktop auth */}
+
           {/* Desktop auth */}
           <div className="hidden items-center gap-2 md:flex">
             {user ? (
