@@ -98,16 +98,19 @@ function FlipCard({
     <button
       type="button"
       onClick={() => setFlipped((f) => !f)}
-      className="group relative h-64 w-full cursor-pointer text-left [perspective:1000px]"
+      className="group relative w-full cursor-pointer text-left [perspective:1000px]"
       aria-label={flipped ? clickToClose : clickToRead}
     >
       <div
-        className={`relative h-full w-full transition-transform duration-500 [transform-style:preserve-3d] ${
+        className={`relative w-full transition-transform duration-500 [transform-style:preserve-3d] ${
           flipped ? "[transform:rotateY(180deg)]" : ""
         }`}
       >
+        {/* Front */}
         <div
-          className="absolute inset-0 rounded-3xl p-10 [backface-visibility:hidden]"
+          className={`rounded-3xl p-10 [backface-visibility:hidden] min-h-64 ${
+            flipped ? "absolute inset-0" : "relative"
+          }`}
           style={{ backgroundColor: bg }}
         >
           <span className="text-xs uppercase tracking-wider text-foreground/60">
@@ -117,8 +120,11 @@ function FlipCard({
           <p className="mt-6 text-sm text-foreground/50">{clickToRead}</p>
         </div>
 
+        {/* Back */}
         <div
-          className="absolute inset-0 rounded-3xl p-8 [backface-visibility:hidden] [transform:rotateY(180deg)]"
+          className={`rounded-3xl p-8 [backface-visibility:hidden] [transform:rotateY(180deg)] min-h-64 ${
+            flipped ? "relative" : "absolute inset-0"
+          }`}
           style={{ backgroundColor: bg }}
         >
           <p className="text-base leading-relaxed text-foreground/90">{body}</p>

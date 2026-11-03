@@ -14,6 +14,7 @@ type MerchItem = {
   imageUrl: string | null;
   sortOrder: number;
   published: boolean;
+  price: number | null;
 };
 
 type FormState = {
@@ -24,6 +25,7 @@ type FormState = {
   imageUrl: string;
   sortOrder: string;
   published: boolean;
+  price: string;
 };
 
 const emptyForm: FormState = {
@@ -34,6 +36,7 @@ const emptyForm: FormState = {
   imageUrl: "",
   sortOrder: "0",
   published: true,
+  price: ""
 };
 
 /** Turn /uploads/... into a full URL the browser can load */
@@ -89,6 +92,7 @@ export function MerchEditor() {
       imageUrl: item.imageUrl || "",
       sortOrder: String(item.sortOrder),
       published: item.published,
+      price: item.price != null ? String(item.price) : "",
     });
   };
 
@@ -135,6 +139,7 @@ export function MerchEditor() {
       imageUrl: form.imageUrl.trim() || null,
       sortOrder: Number(form.sortOrder) || 0,
       published: form.published,
+      price: form.price.trim() === "" ? null : Number(form.price),
     };
 
     try {
@@ -264,6 +269,18 @@ export function MerchEditor() {
               value={form.sortOrder}
               onChange={(e) => set("sortOrder", e.target.value)}
               className="w-24 rounded-xl"
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            {lang === "es" ? "Precio (COP)" : "Price (COP)"}
+            <Input
+              type="number"
+              min={0}
+              step={1000}
+              value={form.price}
+              onChange={(e) => set("price", e.target.value)}
+              placeholder="65000"
+              className="w-32 rounded-xl"
             />
           </label>
           <label className="flex items-center gap-2 text-sm">

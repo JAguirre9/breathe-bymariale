@@ -133,11 +133,8 @@ const dict: Dict = {
 
   // Merch
   "merch.title1": { en: "Carry the", es: "Lleva la" },
-  "merch.title2": { en: "calm.", es: "calma." },
-  "merch.subtitle": {
-    en: "Soft, considered objects designed to bring Breathe into your everyday.",
-    es: "Objetos suaves y pensados para traer Breathe a tu día a día.",
-  },
+  "merch.title2": { en: "calm home.", es: "calma a casa." },
+  "merch.subtitle": {en: "Soft, considered objects designed to bring Breathe into your everyday.",es: "Objetos suaves y pensados para traer Breathe a tu día a día.",},
   "merch.item1": { en: "Cloud cotton tee", es: "Camiseta nube de algodón" },
   "merch.item2": { en: "Linen tote", es: "Bolso de lino" },
   "merch.item3": { en: "Ceramic breath mug", es: "Taza cerámica respirar" },
