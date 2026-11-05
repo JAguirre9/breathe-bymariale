@@ -52,6 +52,20 @@ const dict: Dict = {
   "merch.error": { en: "We couldn't load the merch right now.", es: "No pudimos cargar la tienda en este momento." },
   "merch.close": { en: "Close", es: "Cerrar" },
 
+  // Dashboard - Scheduling validations
+"dash.schedule.title": { en: "Schedule session", es: "Agendar sesión" },
+"dash.schedule.selectedDate": { en: "Selected date:", es: "Fecha seleccionada:" },
+"dash.schedule.adding": { en: "Scheduling...", es: "Agendando..." },
+"dash.schedule.alreadyBooked": { en: "You already have a session this day", es: "Ya tienes una sesión este día" },
+"dash.error.pastDate": {
+  en: "You cannot schedule a session in the past",
+  es: "No puedes agendar una sesión en el pasado",
+},
+"dash.error.onePerDay": {
+  en: "You already have a session scheduled for this day. Only one per day is allowed.",
+  es: "Ya tienes una sesión agendada para este día. Solo se permite una por día.",
+},
+
   // Admin: merch editor
   "admin.merch.title": { en: "Merch", es: "Tienda" },
   "admin.merch.nameEn": { en: "Name (English)", es: "Nombre (inglés)" },

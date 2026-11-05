@@ -126,6 +126,37 @@ function Dashboard() {
     e.preventDefault();
     if (!selectedSpecialist || isAdding) return;
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const selected = new Date(selectedKey + "T12:00:00");
+
+  if (selected < today) {
+    alert(t("dash.error.pastDate"));
+    return;
+  }
+
+  const alreadyHasSession = events.some((ev) => ev.date === selectedKey);
+  if (alreadyHasSession) {
+    alert(t("dash.error.onePerDay"));
+    return;
+  }
+
+  const hasSessionToday = dayEvents.length > 0;
+
+// ...
+
+  <Button
+    type="submit"
+    disabled={isAdding || hasSessionToday}
+    className="w-full rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+  >
+    {isAdding
+      ? "Agendando..."
+      : hasSessionToday
+        ? "Ya tienes una sesión este día"
+        : t("dash.add")}
+  </Button>
+
     setIsAdding(true);
 
     const tempId = crypto.randomUUID();
@@ -232,6 +263,11 @@ function Dashboard() {
               mode="single"
               selected={date}
               onSelect={(d) => d && setDate(d)}
+              disabled={(date) => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                return date < today;
+              }}
               modifiers={{
                 hasEvent: daysWithEvents,
               }}
