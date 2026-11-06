@@ -200,13 +200,23 @@ function Dashboard() {
   };
 
   const removeEvent = async (id: string) => {
-    try {
-      await apiFetch(`/sessions/${id}`, { method: "DELETE" });
-      setEvents((p) => p.filter((e) => e.id !== id));
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  // Confirmación
+  const confirmed = window.confirm(t("dash.session.confirmDelete"));
+  if (!confirmed) return;
+
+  // Optimistic UI
+  const previous = events;
+  setEvents((p) => p.filter((e) => e.id !== id));
+
+  try {
+    await apiFetch(`/sessions/${id}`, { method: "DELETE" });
+  } catch (err) {
+    console.error(err);
+    // Rollback si falla
+    setEvents(previous);
+    alert(t("dash.session.deleteError"));
+  }
+};
 
   const toggleTask = async (id: string) => {
     const current = tasks.find((task) => task.id === id);
