@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { MerchEditor } from "@/components/admin/MerchEditor";
 import { PendingPatients } from "@/components/admin/PendingPatients";
+import { ServicesEditor } from "@/components/admin/ServicesEditor";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({ meta: [{ title: "Admin - Breathe" }] }),
@@ -797,7 +798,13 @@ function AdminPage() {
             )}
           </section>
         </section>
+        <section className="mt-12">
+            <ServicesEditor />
+            </section>
 
+            <section className="mt-12">
+            <MerchEditor />
+          </section>
         <section className="mt-12">
           <MerchEditor />
         </section>
