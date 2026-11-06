@@ -445,18 +445,24 @@ const dict: Dict = {
   "admin.done": { en: "Completed", es: "Completada" },
   "admin.error": { en: "Something went wrong. Please try again.", es: "Algo salió mal. Inténtalo de nuevo." },
 
+  // Dashboard - Session delete
+"dash.session.delete": { en: "Cancel", es: "Cancelar" },
+"dash.session.confirmDelete": {
+  en: "Are you sure you want to cancel this session?",
+  es: "¿Estás seguro de que quieres cancelar esta sesión?",
+},
+"dash.session.deleteError": {
+  en: "Could not cancel the session. Please try again.",
+  es: "No se pudo cancelar la sesión. Inténtalo de nuevo.",
+},
+
   //JournalSection
   "js.loadJournal": { en: "Loading journal...", es: "Cargando tu diario..." },
   "js.journal.title" : {en: "{{name}}'s Journal", es: "Diario de {{name}}"},
+
     // Journal
-  "journal.title": {
-    en: "Journal",
-    es: "Diario",
-  },
-  "journal.subtitle": {
-    en: "A quiet space for your thoughts and feelings.",
-    es: "Un espacio tranquilo para tus pensamientos y sentimientos.",
-  },
+  "journal.title": { en: "Journal", es: "Diario",},
+  "journal.subtitle": {en: "A quiet space for your thoughts and feelings.", es: "Un espacio tranquilo para tus pensamientos y sentimientos.",},
   "journal.new": {
     en: "Add a note to your Journal",
     es: "Añadir una nota a tu Diario",
