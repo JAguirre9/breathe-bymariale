@@ -273,10 +273,10 @@ function Dashboard() {
               mode="single"
               selected={date}
               onSelect={(d) => d && setDate(d)}
- improvements/post-mvp-fixes-ui
+
               classNames={{ today: "text-primary font-semibold" }}
 
- main
+
               disabled={(date) => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
