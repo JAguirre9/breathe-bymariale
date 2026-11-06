@@ -273,6 +273,7 @@ function Dashboard() {
               mode="single"
               selected={date}
               onSelect={(d) => d && setDate(d)}
+              classNames={{ today: "text-primary font-semibold" }}
               disabled={(date) => {
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
@@ -283,7 +284,7 @@ function Dashboard() {
               }}
               modifiersClassNames={{
                 hasEvent:
-                  "relative bg-primary/10 text-primary font-semibold rounded-md after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
+                  "relative text-primary font-semibold after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-primary after:rounded-full",
               }}
               className="mx-auto"
             />
