@@ -279,6 +279,15 @@ const dict: Dict = {
     es: "Nombre preferido",
   },
 
+  "signup.patientID": {
+    en: "Identification",
+    es: "Identificacion",
+  },
+
+  "signup.patientID.help": {
+  en: "We ask for your ID to create the clinic history and avoid duplicate registrations. Your information is kept confidential.",
+  es: "Te pedimos tu documento para la historia clinica y evitar registros duplicados. Tu información es confidencial.",
+},
   "signup.email": {
     en: "Email Address",
     es: "Correo electrónico",
