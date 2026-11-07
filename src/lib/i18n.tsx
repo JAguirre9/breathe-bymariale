@@ -8,7 +8,7 @@ const dict: Dict = {
   // Nav
   "nav.services": { en: "Services", es: "Servicios" },
   "nav.resources": { en: "Resources", es: "Recursos" },
-  "nav.start": { en: "Start your therapy", es: "Inicia tu terapia" },
+  "nav.start": { en: "About us", es: "Conócenos" },
   "nav.merch": { en: "Merch", es: "Tienda" },
   "nav.login": { en: "Log in", es: "Ingresar" },
   "nav.signup": { en: "Sign up", es: "Registrarse" },
@@ -21,7 +21,7 @@ const dict: Dict = {
     en: "Online therapy designed to feel like a quiet morning. Connect with caring specialists, at your rhythm, in a space that holds you gently.",
     es: "Terapia en línea diseñada para sentirse como una mañana tranquila. Conecta con especialistas que te cuidan, a tu ritmo, en un espacio que te abraza con suavidad.",
   },
-  "home.cta.start": { en: "Start your therapy", es: "Inicia tu terapia" },
+  "home.cta.start": { en: "About Us", es: "Conócenos" },
   "home.cta.explore": { en: "Explore services →", es: "Ver servicios →" },
   "home.stat.sessions": { en: "Sessions held", es: "Sesiones realizadas" },
   "home.stat.workshops": { en: "Workshops", es: "Talleres" },
@@ -38,9 +38,10 @@ const dict: Dict = {
     en: "Gentle reads on anxiety, growth, sleep and the in-between.",
     es: "Lecturas suaves sobre ansiedad, crecimiento, sueño y todo lo intermedio.",
   },
+  // Home module card
   "mod.start.copy": {
-    en: "Take a 2-minute matching quiz and meet your specialist.",
-    es: "Realiza un cuestionario de 2 minutos y conoce a tu especialista.",
+  en: "Meet the person behind Breathe and how we work.",
+  es: "Conoce a la persona detrás de Breathe y cómo trabajamos.",
   },
   "mod.merch.copy": {
     en: "Soft apparel and objects to carry the calm with you.",
@@ -136,14 +137,38 @@ const dict: Dict = {
     es: "← Haz clic para cerrar",
   },
 
-  // Start
-  "start.title1": { en: "Begin,", es: "Empieza," },
-  "start.title2": { en: "gently.", es: "con suavidad." },
-  "start.subtitle": {
-    en: "Answer a few soft questions and we'll match you with a specialist who fits your rhythm.",
-    es: "Responde unas preguntas suaves y te conectaremos con un especialista que se ajuste a tu ritmo.",
-  },
-  "start.cta": { en: "Take the 2-minute quiz", es: "Realiza el cuestionario de 2 minutos" },
+ // Start / Conócenos
+"start.title1": { en: "Meet", es: "Conoce a" },
+"start.title2": { en: "Mariale.", es: "Mariale." },
+
+"start.bio.title": { en: "A little about her", es: "Un poco sobre ella" },
+"start.bio.p1": {
+  en: "Maria Alejandra Marulanda is a psychologist with a cognitive-behavioral approach and the founder of Breathe. She has 8 years of experience accompanying people through gender-based violence, work with vulnerable populations, and psychological first aid. She created this space so that therapy feels less like a cold appointment and more like a quiet place where you can breathe, be heard, and move at your own pace.",
+  es: "Maria Alejandra Marulanda es psicóloga con enfoque cognitivo-conductual y fundadora de Breathe. Cuenta con 8 años de experiencia acompañando casos de violencia basada en género, trabajo con poblaciones vulnerables y primeros auxilios psicológicos. Creó este espacio para que la terapia se sienta menos como una cita fría y más como un espacio tranquilo donde puedas respirar, ser escuchada/o y avanzar a tu propio ritmo.",
+},
+"start.bio.p2": {
+  en: "Her work is grounded in care, presence, and respect for each person's rhythm, about their mental health. No pressure, no rush — just a soft, safe accompaniment.",
+  es: "Su trabajo se basa en el cuidado, la presencia y el respeto por el ritmo de cada persona, en cuanto a su salud mental. Sin presión, sin prisa: solo un acompañamiento amable y seguro.",
+},
+
+"start.story.title": { en: "How Breathe was born", es: "Cómo nació Breathe" },
+"start.story.p1": {
+  en: "Breathe was born from a simple idea: mental health care should feel human. Not rushed, not clinical in a distant way — but close, clear, and kind.",
+  es: "Breathe nació de una idea simple: el cuidado de la salud mental debería sentirse humano. No apresurado, no distante: cercano, claro y amable.",
+},
+"start.story.p2": {
+  en: "What started as a desire to offer online therapy with warmth became a full space: sessions, gentle resources, and a path that starts with listening.",
+  es: "Lo que empezó como el deseo de ofrecer terapia en línea con calidez se convirtió en un espacio completo: sesiones, recursos suaves y un camino que empieza por escuchar.",
+},
+"start.story.p3": {
+  en: "Today, Breathe is that morning-quiet space we wanted for ourselves and for others — available from wherever you are.",
+  es: "Hoy, Breathe es ese espacio de mañana tranquila que queríamos para nosotras y para otros: disponible desde donde estés.",
+},
+
+"start.cta": {
+  en: "If you're ready, schedule with me",
+  es: "Si estás listo/a, agenda conmigo",
+},
 
   // Merch
   "merch.title1": { en: "Carry the", es: "Lleva la" },
