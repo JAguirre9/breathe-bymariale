@@ -91,6 +91,37 @@ function SignupPage() {
       alert("Could not connect to server");
     } finally {
       setIsSubmitting(false);
+
+async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
+  e.preventDefault();
+  setIsSubmitting(true);
+
+  try {
+    const res = await fetch(`${API_URL}/intake/patient`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        firstName: intake.firstName,
+        lastName: intake.lastName,
+        preferredName: intake.preferredName,
+        email: intake.email,
+        patientID: intake.patientID,
+        phoneCode: intake.phoneCode,
+        phoneNumber: intake.phoneNumber,
+        contactMethod: intake.contactMethod,
+        age: intake.age,
+        feelings: intake.feelings,
+        priorSessions: intake.priorSessions,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      console.error(data);
+      alert(data.error || "Could not submit form");
+      return;
     }
   }
 
