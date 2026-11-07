@@ -1,9 +1,10 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiFetch } from "@/lib/api";
 import { useT } from "@/lib/i18n";
 import { MerchEditor } from "@/components/admin/MerchEditor";
@@ -61,10 +62,36 @@ type PatientSession = {
 };
 
 const ALLOWED_ROLES = ["ADMIN"];
+const MOODS = ["😀", "😌", "😐", "😔", "😭"];
+
+// Main (top-level) tabs
+const mainTabClass =
+  "rounded-xl px-4 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground";
+const mainListClass =
+  "flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-2xl bg-card p-1.5 shadow-[var(--shadow-card)]";
+
+// Secondary tabs (inside a patient)
+const subTabClass =
+  "rounded-full px-4 py-1.5 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground";
+const subListClass =
+  "flex h-auto w-full justify-start gap-1 overflow-x-auto rounded-full bg-card p-1 shadow-[var(--shadow-card)] sm:w-fit";
+
+const cardClass = "rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]";
+
+// Today as yyyy-mm-dd in the browser's local time (sessions are stored that way)
+function todayKey() {
+  const d = new Date();
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+}
 
 function AdminPage() {
-  const { t } = useT();
+  const { t, lang } = useT();
+  const es = lang === "es";
   const router = useRouter();
+
+  const [tab, setTab] = useState("pending");
+  const [pendingCount, setPendingCount] = useState(0);
 
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientId, setPatientId] = useState("");
@@ -104,7 +131,12 @@ function AdminPage() {
   };
   const [resForm, setResForm] = useState(emptyResForm);
 
-  // Access check + load active patients
+  const loadPendingCount = () =>
+    apiFetch("/admin/patients/pending")
+      .then((data) => setPendingCount((data.patients || []).length))
+      .catch(console.error);
+
+  // Access check + load active patients + pending badge
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -125,6 +157,8 @@ function AdminPage() {
         console.error(err);
         setError(t("admin.error"));
       });
+
+    loadPendingCount();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
@@ -169,7 +203,12 @@ function AdminPage() {
     setJournalLoading(true);
     apiFetch(`/admin/patients/${patientId}/journal`)
       .then((data) => {
-        const list: JournalEntry[] = data.entries || [];
+        // Newest first
+        const list: JournalEntry[] = (data.entries || []).sort(
+          (a: JournalEntry, b: JournalEntry) =>
+            b.date.localeCompare(a.date) ||
+            b.createdAt.localeCompare(a.createdAt)
+        );
         setJournalEntries(list);
         if (list.length > 0) setActiveJournalId(list[0].id);
       })
@@ -189,6 +228,30 @@ function AdminPage() {
       .finally(() => setSessionsLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientId]);
+
+  // Sessions: upcoming first (soonest on top), then past (most recent on top)
+  const { upcomingSessions, pastSessions } = useMemo(() => {
+    const today = todayKey();
+    const key = (s: PatientSession) => `${s.date} ${s.time}`;
+    const upcoming = sessions
+      .filter((s) => s.date >= today)
+      .sort((a, b) => key(a).localeCompare(key(b)));
+    const past = sessions
+      .filter((s) => s.date < today)
+      .sort((a, b) => key(b).localeCompare(key(a)));
+    return { upcomingSessions: upcoming, pastSessions: past };
+  }, [sessions]);
+
+  // Tasks: open first, then completed; newest first inside each group
+  const orderedTasks = useMemo(
+    () =>
+      [...tasks].sort(
+        (a, b) =>
+          Number(a.done) - Number(b.done) ||
+          b.createdAt.localeCompare(a.createdAt)
+      ),
+    [tasks]
+  );
 
   const addTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -320,6 +383,29 @@ function AdminPage() {
   const patientLabel = (p: Patient) =>
     `${p.firstName}${p.lastName ? " " + p.lastName : ""} (${p.email})`;
 
+  const renderSession = (s: PatientSession, muted = false) => (
+    <li
+      key={s.id}
+      className={`rounded-2xl border border-border/50 bg-background/50 px-4 py-3 ${
+        muted ? "opacity-70" : ""
+      }`}
+    >
+      <p className="text-sm font-medium text-foreground">
+        {s.date} · {s.time}
+      </p>
+      <p className="mt-0.5 text-sm text-foreground/80">{s.title}</p>
+      {s.specialist && (
+        <p className="mt-0.5 text-xs text-foreground/50">{s.specialist}</p>
+      )}
+      <p className="mt-1 text-xs text-foreground/40">
+        {es ? "Agendada " : "Booked "}
+        {new Date(s.createdAt).toLocaleString(es ? "es-ES" : "en-US")}
+      </p>
+    </li>
+  );
+
+  const activeEntry = journalEntries.find((e) => e.id === activeJournalId);
+
   return (
     <div className="min-h-screen" style={{ background: "var(--gradient-hero)" }}>
       <SiteHeader />
@@ -337,477 +423,536 @@ function AdminPage() {
           </p>
         )}
 
-        <PendingPatients
-          onActivated={() =>
-            apiFetch("/admin/patients")
-              .then((data) => setPatients(data.patients || []))
-              .catch(console.error)
-          }
-        />
+        <Tabs value={tab} onValueChange={setTab}>
+          <TabsList className={mainListClass}>
+            <TabsTrigger value="pending" className={mainTabClass}>
+              {es ? "Pendientes" : "Pending"}
+              {pendingCount > 0 && (
+                <span className="ml-2 rounded-full bg-foreground/10 px-2 py-0.5 text-xs">
+                  {pendingCount}
+                </span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="patients" className={mainTabClass}>
+              {es ? "Pacientes" : "Patients"}
+            </TabsTrigger>
+            <TabsTrigger value="resources" className={mainTabClass}>
+              {es ? "Recursos" : "Resources"}
+            </TabsTrigger>
+            <TabsTrigger value="shop" className={mainTabClass}>
+              {es ? "Tienda y precios" : "Shop & prices"}
+            </TabsTrigger>
+          </TabsList>
 
-        <section className="mb-6 mt-8 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-          <label className="mb-2 block text-sm font-medium text-foreground">
-            {t("admin.patient")}
-          </label>
-          {patients.length === 0 ? (
-            <p className="text-sm text-foreground/50">{t("admin.noPatients")}</p>
-          ) : (
-            <select
-              value={patientId}
-              onChange={(e) => setPatientId(e.target.value)}
-              className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option value="">{t("admin.selectPatient")}</option>
-              {patients.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {patientLabel(p)}
-                </option>
-              ))}
-            </select>
-          )}
-        </section>
+          {/* ───────── 1. PENDING PATIENTS ───────── */}
+          <TabsContent value="pending" className="mt-6">
+            <PendingPatients
+              onActivated={() => {
+                setPendingCount((c) => Math.max(0, c - 1));
+                apiFetch("/admin/patients")
+                  .then((data) => setPatients(data.patients || []))
+                  .catch(console.error);
+              }}
+            />
+          </TabsContent>
 
-        {patientId && (
-          <div className="mb-12 grid gap-6 lg:grid-cols-3">
-            {/* Tasks */}
-            <div className="space-y-6">
-              <form
-                onSubmit={addTask}
-                className="space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
-              >
-                <h2 className="font-display text-xl font-semibold">
-                  {t("admin.newTask")}
-                </h2>
-                <Input
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  placeholder={t("admin.taskTitle")}
-                  className="rounded-xl"
-                />
-                <Textarea
-                  value={newDesc}
-                  onChange={(e) => setNewDesc(e.target.value)}
-                  placeholder={t("admin.taskDesc")}
-                  className="rounded-xl"
-                />
-                <Button
-                  type="submit"
-                  disabled={saving || !newTitle.trim()}
-                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-                >
-                  {t("admin.addTask")}
-                </Button>
-              </form>
-
-              <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-                {tasks.length === 0 ? (
-                  <p className="text-sm text-foreground/50">
-                    {t("admin.tasks.empty")}
-                  </p>
-                ) : (
-                  <ul className="space-y-3">
-                    {tasks.map((task) => (
-                      <li
-                        key={task.id}
-                        className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
-                      >
-                        {editingId === task.id ? (
-                          <div className="space-y-2">
-                            <Input
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              className="rounded-xl"
-                            />
-                            <Textarea
-                              value={editDesc}
-                              onChange={(e) => setEditDesc(e.target.value)}
-                              className="rounded-xl"
-                            />
-                            <div className="flex gap-2">
-                              <Button size="sm" onClick={() => saveEdit(task.id)}>
-                                {t("admin.save")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => setEditingId(null)}
-                              >
-                                {t("admin.cancel")}
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-start justify-between gap-3">
-                            <div className="min-w-0 flex-1">
-                              <p
-                                className={`text-sm font-medium ${
-                                  task.done
-                                    ? "line-through text-foreground/50"
-                                    : "text-foreground"
-                                }`}
-                              >
-                                {task.title}
-                              </p>
-                              {task.description && (
-                                <p className="mt-0.5 text-xs text-foreground/60">
-                                  {task.description}
-                                </p>
-                              )}
-                              {task.done && (
-                                <p className="mt-1 text-xs font-medium text-primary">
-                                  ✓ {t("admin.done")}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex shrink-0 gap-1">
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => startEdit(task)}
-                              >
-                                {t("admin.edit")}
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                onClick={() => removeTask(task.id)}
-                                className="text-foreground/50 hover:text-destructive"
-                              >
-                                {t("admin.delete")}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            </div>
-
-            {/* Journal */}
-            <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-              <h2 className="font-display text-xl font-semibold">
-                {t("journal.title")}
-              </h2>
-              <p className="mt-1 mb-4 text-sm text-foreground/60">
-                What this patient has written (read-only).
-              </p>
-
-              {journalLoading ? (
-                <p className="text-sm text-foreground/50">…</p>
-              ) : journalEntries.length === 0 ? (
-                <p className="text-sm text-foreground/50">{t("journal.empty")}</p>
+          {/* ───────── 2. PATIENTS ───────── */}
+          <TabsContent value="patients" className="mt-6">
+            <section className={cardClass}>
+              <label className="mb-2 block text-sm font-medium text-foreground">
+                {t("admin.patient")}
+              </label>
+              {patients.length === 0 ? (
+                <p className="text-sm text-foreground/50">
+                  {t("admin.noPatients")}
+                </p>
               ) : (
-                <div className="flex flex-col gap-4">
-                  <ul className="max-h-48 space-y-2 overflow-y-auto">
-                    {journalEntries.map((entry) => {
-                      const active = entry.id === activeJournalId;
-                      const moods = ["😀", "😌", "😐", "😔", "😭"];
-                      return (
-                        <li key={entry.id}>
-                          <button
-                            type="button"
-                            onClick={() => setActiveJournalId(entry.id)}
-                            className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
-                              active
-                                ? "border-primary/50 bg-primary/10"
-                                : "border-border/50 bg-background/50 hover:bg-background"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">
-                                {moods[entry.mood - 1] ?? "😐"}
-                              </span>
-                              <span className="truncate text-sm font-medium">
-                                {entry.title}
-                              </span>
-                            </div>
-                            <p className="mt-1 text-xs text-foreground/50">
-                              {entry.date}
-                            </p>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-
-                  <div className="rounded-2xl border border-border/50 bg-background/50 p-4">
-                    {(() => {
-                      const entry = journalEntries.find(
-                        (e) => e.id === activeJournalId
-                      );
-                      if (!entry) return null;
-                      const moods = ["😀", "😌", "😐", "😔", "😭"];
-                      return (
-                        <>
-                          <div className="mb-3 flex items-center gap-2">
-                            <span className="text-2xl">
-                              {moods[entry.mood - 1] ?? "😐"}
-                            </span>
-                            <div>
-                              <p className="font-medium text-foreground">
-                                {entry.title}
-                              </p>
-                              <p className="text-xs text-foreground/50">
-                                {entry.date}
-                              </p>
-                            </div>
-                          </div>
-                          <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
-                            {entry.text || "—"}
-                          </p>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
+                <select
+                  value={patientId}
+                  onChange={(e) => setPatientId(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">{t("admin.selectPatient")}</option>
+                  {patients.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {patientLabel(p)}
+                    </option>
+                  ))}
+                </select>
               )}
             </section>
 
-            {/* Sessions */}
-            <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-              <h2 className="font-display text-xl font-semibold">Sessions</h2>
-              <p className="mt-1 mb-4 text-sm text-foreground/60">
-                Appointments this patient has scheduled.
-              </p>
+            {patientId && (
+              <Tabs defaultValue="sessions" className="mt-6">
+                <TabsList className={subListClass}>
+                  <TabsTrigger value="sessions" className={subTabClass}>
+                    {es ? "Sesiones" : "Sessions"}
+                  </TabsTrigger>
+                  <TabsTrigger value="tasks" className={subTabClass}>
+                    {es ? "Tareas" : "Tasks"}
+                  </TabsTrigger>
+                  <TabsTrigger value="journal" className={subTabClass}>
+                    {es ? "Diario" : "Journal"}
+                  </TabsTrigger>
+                </TabsList>
 
-              {sessionsLoading ? (
-                <p className="text-sm text-foreground/50">…</p>
-              ) : sessions.length === 0 ? (
-                <p className="text-sm text-foreground/50">
-                  No sessions scheduled yet.
-                </p>
-              ) : (
-                <ul className="space-y-2">
-                  {sessions.map((s) => (
-                    <li
-                      key={s.id}
-                      className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
-                    >
-                      <div className="flex items-start justify-between gap-2">
+                {/* Sessions: chronological */}
+                <TabsContent value="sessions" className="mt-4">
+                  <section className={cardClass}>
+                    <h2 className="font-display text-xl font-semibold">
+                      {es ? "Sesiones" : "Sessions"}
+                    </h2>
+                    <p className="mt-1 mb-4 text-sm text-foreground/60">
+                      {es
+                        ? "Citas que este paciente ha agendado: primero las próximas, luego las pasadas."
+                        : "Appointments this patient has scheduled: upcoming first, then past."}
+                    </p>
+
+                    {sessionsLoading ? (
+                      <p className="text-sm text-foreground/50">…</p>
+                    ) : sessions.length === 0 ? (
+                      <p className="text-sm text-foreground/50">
+                        {es
+                          ? "Aún no hay sesiones agendadas."
+                          : "No sessions scheduled yet."}
+                      </p>
+                    ) : (
+                      <div className="space-y-6">
                         <div>
-                          <p className="text-sm font-medium text-foreground">
-                            {s.date} · {s.time}
-                          </p>
-                          <p className="mt-0.5 text-sm text-foreground/80">
-                            {s.title}
-                          </p>
-                          {s.specialist && (
-                            <p className="mt-0.5 text-xs text-foreground/50">
-                              {s.specialist}
+                          <h3 className="mb-2 text-sm font-semibold text-foreground">
+                            {es ? "Próximas" : "Upcoming"} ({upcomingSessions.length})
+                          </h3>
+                          {upcomingSessions.length === 0 ? (
+                            <p className="text-sm text-foreground/50">
+                              {es ? "Ninguna." : "None."}
                             </p>
+                          ) : (
+                            <ul className="space-y-2">
+                              {upcomingSessions.map((s) => renderSession(s))}
+                            </ul>
+                          )}
+                        </div>
+
+                        {pastSessions.length > 0 && (
+                          <div>
+                            <h3 className="mb-2 text-sm font-semibold text-foreground/70">
+                              {es ? "Pasadas" : "Past"} ({pastSessions.length})
+                            </h3>
+                            <ul className="space-y-2">
+                              {pastSessions.map((s) => renderSession(s, true))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                </TabsContent>
+
+                {/* Tasks */}
+                <TabsContent value="tasks" className="mt-4">
+                  <div className="grid gap-6 lg:grid-cols-2">
+                    <form
+                      onSubmit={addTask}
+                      className="h-fit space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
+                    >
+                      <h2 className="font-display text-xl font-semibold">
+                        {t("admin.newTask")}
+                      </h2>
+                      <Input
+                        value={newTitle}
+                        onChange={(e) => setNewTitle(e.target.value)}
+                        placeholder={t("admin.taskTitle")}
+                        className="rounded-xl"
+                      />
+                      <Textarea
+                        value={newDesc}
+                        onChange={(e) => setNewDesc(e.target.value)}
+                        placeholder={t("admin.taskDesc")}
+                        className="rounded-xl"
+                      />
+                      <Button
+                        type="submit"
+                        disabled={saving || !newTitle.trim()}
+                        className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      >
+                        {t("admin.addTask")}
+                      </Button>
+                    </form>
+
+                    <section className={cardClass}>
+                      {orderedTasks.length === 0 ? (
+                        <p className="text-sm text-foreground/50">
+                          {t("admin.tasks.empty")}
+                        </p>
+                      ) : (
+                        <ul className="space-y-3">
+                          {orderedTasks.map((task) => (
+                            <li
+                              key={task.id}
+                              className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                            >
+                              {editingId === task.id ? (
+                                <div className="space-y-2">
+                                  <Input
+                                    value={editTitle}
+                                    onChange={(e) => setEditTitle(e.target.value)}
+                                    className="rounded-xl"
+                                  />
+                                  <Textarea
+                                    value={editDesc}
+                                    onChange={(e) => setEditDesc(e.target.value)}
+                                    className="rounded-xl"
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => saveEdit(task.id)}
+                                    >
+                                      {t("admin.save")}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => setEditingId(null)}
+                                    >
+                                      {t("admin.cancel")}
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0 flex-1">
+                                    <p
+                                      className={`text-sm font-medium ${
+                                        task.done
+                                          ? "line-through text-foreground/50"
+                                          : "text-foreground"
+                                      }`}
+                                    >
+                                      {task.title}
+                                    </p>
+                                    {task.description && (
+                                      <p className="mt-0.5 text-xs text-foreground/60">
+                                        {task.description}
+                                      </p>
+                                    )}
+                                    {task.done && (
+                                      <p className="mt-1 text-xs font-medium text-primary">
+                                        ✓ {t("admin.done")}
+                                      </p>
+                                    )}
+                                  </div>
+                                  <div className="flex shrink-0 gap-1">
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => startEdit(task)}
+                                    >
+                                      {t("admin.edit")}
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => removeTask(task.id)}
+                                      className="text-foreground/50 hover:text-destructive"
+                                    >
+                                      {t("admin.delete")}
+                                    </Button>
+                                  </div>
+                                </div>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </section>
+                  </div>
+                </TabsContent>
+
+                {/* Journal: newest first, read-only */}
+                <TabsContent value="journal" className="mt-4">
+                  <section className={cardClass}>
+                    <h2 className="font-display text-xl font-semibold">
+                      {t("journal.title")}
+                    </h2>
+                    <p className="mt-1 mb-4 text-sm text-foreground/60">
+                      {es
+                        ? "Lo que ha escrito este paciente (solo lectura), de lo más reciente a lo más antiguo."
+                        : "What this patient has written (read-only), newest first."}
+                    </p>
+
+                    {journalLoading ? (
+                      <p className="text-sm text-foreground/50">…</p>
+                    ) : journalEntries.length === 0 ? (
+                      <p className="text-sm text-foreground/50">
+                        {t("journal.empty")}
+                      </p>
+                    ) : (
+                      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+                        <ul className="max-h-96 space-y-2 overflow-y-auto">
+                          {journalEntries.map((entry) => {
+                            const active = entry.id === activeJournalId;
+                            return (
+                              <li key={entry.id}>
+                                <button
+                                  type="button"
+                                  onClick={() => setActiveJournalId(entry.id)}
+                                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
+                                    active
+                                      ? "border-primary/50 bg-primary/10"
+                                      : "border-border/50 bg-background/50 hover:bg-background"
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-lg">
+                                      {MOODS[entry.mood - 1] ?? "😐"}
+                                    </span>
+                                    <span className="truncate text-sm font-medium">
+                                      {entry.title}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1 text-xs text-foreground/50">
+                                    {entry.date}
+                                  </p>
+                                </button>
+                              </li>
+                            );
+                          })}
+                        </ul>
+
+                        <div className="rounded-2xl border border-border/50 bg-background/50 p-4">
+                          {activeEntry && (
+                            <>
+                              <div className="mb-3 flex items-center gap-2">
+                                <span className="text-2xl">
+                                  {MOODS[activeEntry.mood - 1] ?? "😐"}
+                                </span>
+                                <div>
+                                  <p className="font-medium text-foreground">
+                                    {activeEntry.title}
+                                  </p>
+                                  <p className="text-xs text-foreground/50">
+                                    {activeEntry.date}
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/80">
+                                {activeEntry.text || "—"}
+                              </p>
+                            </>
                           )}
                         </div>
                       </div>
-                      <p className="mt-1 text-xs text-foreground/40">
-                        Booked {new Date(s.createdAt).toLocaleString()}
-                      </p>
+                    )}
+                  </section>
+                </TabsContent>
+              </Tabs>
+            )}
+          </TabsContent>
+
+          {/* ───────── 3. RESOURCES ───────── */}
+          <TabsContent value="resources" className="mt-6">
+            <h2 className="font-display text-3xl font-semibold text-foreground">
+              {es ? "Recursos" : "Resources"}
+            </h2>
+            <p className="mt-1 mb-6 text-sm text-foreground/60">
+              {es
+                ? "Edita las tarjetas que se muestran en la página de Recursos (EN + ES)."
+                : "Edit the cards shown on the Resources page (EN + ES)."}
+            </p>
+
+            {resError && (
+              <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
+                {resError}
+              </p>
+            )}
+
+            <form
+              onSubmit={saveResource}
+              className="mb-6 space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
+            >
+              <h3 className="font-display text-xl font-semibold">
+                {editingResId
+                  ? es ? "Editar recurso" : "Edit resource"
+                  : es ? "Nuevo recurso" : "New resource"}
+              </h3>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <Input
+                  value={resForm.titleEn}
+                  onChange={(e) =>
+                    setResForm({ ...resForm, titleEn: e.target.value })
+                  }
+                  placeholder="Title (English)"
+                  className="rounded-xl"
+                  required
+                />
+                <Input
+                  value={resForm.titleEs}
+                  onChange={(e) =>
+                    setResForm({ ...resForm, titleEs: e.target.value })
+                  }
+                  placeholder="Título (Español)"
+                  className="rounded-xl"
+                  required
+                />
+              </div>
+
+              <Textarea
+                value={resForm.bodyEn}
+                onChange={(e) =>
+                  setResForm({ ...resForm, bodyEn: e.target.value })
+                }
+                placeholder="Body (English)"
+                className="rounded-xl min-h-24"
+                required
+              />
+              <Textarea
+                value={resForm.bodyEs}
+                onChange={(e) =>
+                  setResForm({ ...resForm, bodyEs: e.target.value })
+                }
+                placeholder="Cuerpo (Español)"
+                className="rounded-xl min-h-24"
+                required
+              />
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <Input
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={resForm.minutes}
+                  onChange={(e) =>
+                    setResForm({
+                      ...resForm,
+                      minutes: Number(e.target.value) || 5,
+                    })
+                  }
+                  placeholder={es ? "Minutos" : "Minutes"}
+                  className="rounded-xl"
+                />
+                <select
+                  value={resForm.bgColor}
+                  onChange={(e) =>
+                    setResForm({ ...resForm, bgColor: e.target.value })
+                  }
+                  className="h-10 rounded-xl border border-border bg-background px-3 text-sm"
+                >
+                  <option value="var(--note-1)">Soft blue</option>
+                  <option value="var(--note-2)">Peach</option>
+                  <option value="var(--note-3)">Sky</option>
+                  <option value="var(--note-4)">Lavender</option>
+                </select>
+                <Input
+                  type="number"
+                  value={resForm.sortOrder}
+                  onChange={(e) =>
+                    setResForm({
+                      ...resForm,
+                      sortOrder: Number(e.target.value) || 0,
+                    })
+                  }
+                  placeholder={es ? "Orden" : "Sort order"}
+                  className="rounded-xl"
+                />
+              </div>
+
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={resForm.published}
+                  onChange={(e) =>
+                    setResForm({ ...resForm, published: e.target.checked })
+                  }
+                />
+                {es ? "Publicado" : "Published"}
+              </label>
+
+              <div className="flex gap-2">
+                <Button
+                  type="submit"
+                  disabled={resSaving}
+                  className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {editingResId
+                    ? t("admin.save")
+                    : es ? "Añadir recurso" : "Add resource"}
+                </Button>
+                {editingResId && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={cancelEditResource}
+                  >
+                    {t("admin.cancel")}
+                  </Button>
+                )}
+              </div>
+            </form>
+
+            <section className={cardClass}>
+              {resLoading ? (
+                <p className="text-sm text-foreground/50">…</p>
+              ) : resources.length === 0 ? (
+                <p className="text-sm text-foreground/50">
+                  {es
+                    ? "Aún no hay recursos. Agrega el primero arriba."
+                    : "No resources yet. Add the first one above."}
+                </p>
+              ) : (
+                <ul className="space-y-3">
+                  {resources.map((r) => (
+                    <li
+                      key={r.id}
+                      className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-foreground">
+                            {r.titleEn}
+                            {!r.published && (
+                              <span className="ml-2 text-xs text-foreground/40">
+                                ({es ? "borrador" : "draft"})
+                              </span>
+                            )}
+                          </p>
+                          <p className="mt-0.5 text-xs text-foreground/60">
+                            {r.titleEs} · {r.minutes} min ·{" "}
+                            {es ? "orden" : "order"} {r.sortOrder}
+                          </p>
+                        </div>
+                        <div className="flex shrink-0 gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => startEditResource(r)}
+                          >
+                            {t("admin.edit")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => removeResource(r.id)}
+                            className="text-foreground/50 hover:text-destructive"
+                          >
+                            {t("admin.delete")}
+                          </Button>
+                        </div>
+                      </div>
                     </li>
                   ))}
                 </ul>
               )}
             </section>
-          </div>
-        )}
+          </TabsContent>
 
-        {/* Resources CMS */}
-        <section className="mt-12">
-          <h2 className="font-display text-3xl font-semibold text-foreground">
-            Resources
-          </h2>
-          <p className="mt-1 mb-6 text-sm text-foreground/60">
-            Edit the cards shown on the Resources page (EN + ES).
-          </p>
-
-          {resError && (
-            <p className="mb-4 rounded-xl bg-destructive/10 px-4 py-2 text-sm text-destructive">
-              {resError}
-            </p>
-          )}
-
-          <form
-            onSubmit={saveResource}
-            className="mb-6 space-y-3 rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]"
-          >
-            <h3 className="font-display text-xl font-semibold">
-              {editingResId ? "Edit resource" : "New resource"}
-            </h3>
-
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input
-                value={resForm.titleEn}
-                onChange={(e) =>
-                  setResForm({ ...resForm, titleEn: e.target.value })
-                }
-                placeholder="Title (English)"
-                className="rounded-xl"
-                required
-              />
-              <Input
-                value={resForm.titleEs}
-                onChange={(e) =>
-                  setResForm({ ...resForm, titleEs: e.target.value })
-                }
-                placeholder="Título (Español)"
-                className="rounded-xl"
-                required
-              />
-            </div>
-
-            <Textarea
-              value={resForm.bodyEn}
-              onChange={(e) =>
-                setResForm({ ...resForm, bodyEn: e.target.value })
-              }
-              placeholder="Body (English)"
-              className="rounded-xl min-h-24"
-              required
-            />
-            <Textarea
-              value={resForm.bodyEs}
-              onChange={(e) =>
-                setResForm({ ...resForm, bodyEs: e.target.value })
-              }
-              placeholder="Cuerpo (Español)"
-              className="rounded-xl min-h-24"
-              required
-            />
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <Input
-                type="number"
-                min={1}
-                max={60}
-                value={resForm.minutes}
-                onChange={(e) =>
-                  setResForm({
-                    ...resForm,
-                    minutes: Number(e.target.value) || 5,
-                  })
-                }
-                placeholder="Minutes"
-                className="rounded-xl"
-              />
-              <select
-                value={resForm.bgColor}
-                onChange={(e) =>
-                  setResForm({ ...resForm, bgColor: e.target.value })
-                }
-                className="h-10 rounded-xl border border-border bg-background px-3 text-sm"
-              >
-                <option value="var(--note-1)">Soft blue</option>
-                <option value="var(--note-2)">Peach</option>
-                <option value="var(--note-3)">Sky</option>
-                <option value="var(--note-4)">Lavender</option>
-              </select>
-              <Input
-                type="number"
-                value={resForm.sortOrder}
-                onChange={(e) =>
-                  setResForm({
-                    ...resForm,
-                    sortOrder: Number(e.target.value) || 0,
-                  })
-                }
-                placeholder="Sort order"
-                className="rounded-xl"
-              />
-            </div>
-
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={resForm.published}
-                onChange={(e) =>
-                  setResForm({ ...resForm, published: e.target.checked })
-                }
-              />
-              Published
-            </label>
-
-            <div className="flex gap-2">
-              <Button
-                type="submit"
-                disabled={resSaving}
-                className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90"
-              >
-                {editingResId ? t("admin.save") : "Add resource"}
-              </Button>
-              {editingResId && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={cancelEditResource}
-                >
-                  {t("admin.cancel")}
-                </Button>
-              )}
-            </div>
-          </form>
-
-          <section className="rounded-3xl bg-card p-6 shadow-[var(--shadow-card)]">
-            {resLoading ? (
-              <p className="text-sm text-foreground/50">…</p>
-            ) : resources.length === 0 ? (
-              <p className="text-sm text-foreground/50">
-                No resources yet. Add the first one above.
-              </p>
-            ) : (
-              <ul className="space-y-3">
-                {resources.map((r) => (
-                  <li
-                    key={r.id}
-                    className="rounded-2xl border border-border/50 bg-background/50 px-4 py-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-foreground">
-                          {r.titleEn}
-                          {!r.published && (
-                            <span className="ml-2 text-xs text-foreground/40">
-                              (draft)
-                            </span>
-                          )}
-                        </p>
-                        <p className="mt-0.5 text-xs text-foreground/60">
-                          {r.titleEs} · {r.minutes} min · order {r.sortOrder}
-                        </p>
-                      </div>
-                      <div className="flex shrink-0 gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => startEditResource(r)}
-                        >
-                          {t("admin.edit")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => removeResource(r.id)}
-                          className="text-foreground/50 hover:text-destructive"
-                        >
-                          {t("admin.delete")}
-                        </Button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-        </section>
-        <section className="mt-12">
+          {/* ───────── 4. SHOP & PRICES ───────── */}
+          <TabsContent value="shop" className="mt-6">
             <ServicesEditor />
-            </section>
-
-            <section className="mt-12">
             <MerchEditor />
-          </section>
-        <section className="mt-12">
-          <MerchEditor />
-        </section>
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

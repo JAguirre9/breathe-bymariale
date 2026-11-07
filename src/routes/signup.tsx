@@ -62,6 +62,7 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
         lastName: intake.lastName,
         preferredName: intake.preferredName,
         email: intake.email,
+        patientID: intake.patientID,
         phoneCode: intake.phoneCode,
         phoneNumber: intake.phoneNumber,
         contactMethod: intake.contactMethod,

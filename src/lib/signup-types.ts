@@ -14,6 +14,7 @@ export interface SignupIntake {
 
   // Patient Fields
   age: string;
+  patientID: string;
   feelings: string;
   priorSessions: string;
 
@@ -32,6 +33,7 @@ export const defaultSignupIntake: SignupIntake = {
   lastName: "",
   preferredName: "",
   email: "",
+  patientID: "",
 
   phoneCode: "+57",
   phoneNumber: "",

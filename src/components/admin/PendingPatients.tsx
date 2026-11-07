@@ -12,6 +12,8 @@ type PendingPatient = {
   createdAt: string;
   patientProfile?: {
     preferredName: string | null;
+    patientID: string | null;
+    patientIDType: string | null;
     phoneCode: string | null;
     phoneNumber: string | null;
     age: number | null;
@@ -205,6 +207,15 @@ export function PendingPatients({ onActivated }: { onActivated?: () => void }) {
                       <p>
                         <span className="text-foreground/50">{es ? "Edad: " : "Age: "}</span>
                         {pr.age}
+                      </p>
+                    )}
+                    {pr.patientID && (
+                      <p>
+                        <span className="text-foreground/50">
+                          {es ? "Identificación: " : "ID: "}
+                        </span>
+                        {pr.patientIDType ? `${pr.patientIDType} ` : ""}
+                        {pr.patientID}
                       </p>
                     )}
                     {pr.feelings && (

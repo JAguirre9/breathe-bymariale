@@ -34,7 +34,7 @@ function Index() {
       <img src={logo} alt="" aria-hidden className="pointer-events-none absolute right-[8%] top-[60%] h-28 w-28 opacity-40 animate-float-slower" />
       <img src={logo} alt="" aria-hidden className="pointer-events-none absolute left-[40%] top-[8%] h-12 w-12 opacity-50 animate-float-slow" />
 
-      <main className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 pt-36 pb-24 md:grid-cols-2 md:pt-44">
+      <main className="relative mx-auto grid max-w-7xl grid-cols-1 items-center gap-12 px-6 pt-32 pb-12 md:grid-cols-2 md:pt-44 md:pb-24">
         <div>
           <span className="inline-flex items-center gap-2 rounded-full bg-[var(--note-2)] px-4 py-1.5 text-xs font-medium text-foreground/70">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
@@ -73,10 +73,10 @@ function Index() {
           </div>
         </div>
 
-        <div className="relative">
+        <div className="relative hidden md:block">
           <div className="absolute -inset-6 rounded-[2.5rem] bg-[var(--note-4)] blur-2xl opacity-70" />
           <div className="relative overflow-hidden rounded-[2rem] shadow-[var(--shadow-soft)]">
-            <img src={hero} alt="Person breathing peacefully at sunset" className="h-[560px] w-full object-cover" width={1024} height={1024} />
+            <img src={hero} alt="Person breathing peacefully at sunset" loading="lazy" className="h-[560px] w-full object-cover" width={1024} height={1024} />
           </div>
           <div className="absolute -bottom-6 -left-6 hidden rounded-2xl bg-card p-4 shadow-[var(--shadow-card)] md:block">
             <div className="flex items-center gap-3">

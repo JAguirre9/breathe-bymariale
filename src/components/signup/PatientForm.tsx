@@ -3,6 +3,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useT } from "@/lib/i18n";
+import { useState } from "react";
+import { HelpCircle } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface PatientFormProps {
   intake: any;
@@ -20,6 +28,7 @@ export function PatientForm({
   isSubmitting,
 }: PatientFormProps) {
   const { t } = useT();
+  const [idHelpOpen, setIdHelpOpen] = useState(false);
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
@@ -74,6 +83,63 @@ export function PatientForm({
             />
           </div>
 
+          {/* IDENTIFICATION (type + number + help tooltip) */}
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Label>{t("signup.patientID")}</Label>
+
+              <TooltipProvider delayDuration={100}>
+                <Tooltip open={idHelpOpen} onOpenChange={setIdHelpOpen}>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label={t("signup.patientID.help")}
+                      onClick={() => setIdHelpOpen(true)}
+                      className="rounded-full text-foreground/50 transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <HelpCircle className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-64 text-center">
+                    {t("signup.patientID.help")}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+
+            <div className="mt-2 flex h-9 w-full overflow-hidden rounded-xl border border-input bg-transparent shadow-sm transition-colors focus-within:ring-1 focus-within:ring-ring">
+              <select
+                aria-label="Tipo de documento"
+                className="h-full shrink-0 border-0 border-r border-input bg-muted/40 pl-3 pr-1 text-sm focus-visible:outline-none"
+                value={intake.patientIDType}
+                onChange={(e) =>
+                  setIntake({
+                    ...intake,
+                    patientIDType: e.target.value,
+                  })
+                }
+              >
+                <option value="CC">CC</option>
+                <option value="CE">CE</option>
+                <option value="TI">TI</option>
+                <option value="PA">PA</option>
+              </select>
+
+              <Input
+                className="h-full min-w-0 flex-1 rounded-none border-0 shadow-none focus-visible:ring-0"
+                value={intake.patientID}
+                maxLength={30}
+                autoComplete="off"
+                onChange={(e) =>
+                  setIntake({
+                    ...intake,
+                    patientID: e.target.value,
+                  })
+                }
+              />
+            </div>
+          </div>
+
           <div>
             <Label>{t("signup.email")}</Label>
             <Input
@@ -103,7 +169,7 @@ export function PatientForm({
           <div>
             <Label>Code</Label>
             <select
-              className="mt-2 h-11 w-full rounded-xl border border-input bg-background px-3"
+              className="mt-2 h-9 w-full rounded-xl border border-input bg-background px-3"
               value={intake.phoneCode}
               onChange={(e) =>
                 setIntake({
