@@ -1,4 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  useRouter,
+  useSearch,
+} from "@tanstack/react-router";
 import { useState } from "react";
 
 import { SiteHeader } from "@/components/SiteHeader";
@@ -18,93 +23,90 @@ import {
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
-    meta: [
-      {
-        title: "Sign Up | Breathe",
-      },
-    ],
+    meta: [{ title: "Sign Up | Breathe" }],
   }),
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      role: search.role === "patient" ? "patient" : undefined,
+    };
+  },
   component: SignupPage,
 });
 
 function SignupPage() {
   const { lang } = useT();
   const es = lang === "es";
+  const router = useRouter();
+  const { role } = useSearch({ from: "/signup" });
 
-  // Patients must accept the privacy policy before filling the form
+  // Si viene de /start con ?role=patient → salta la card
+  const cameFromStart = role === "patient";
+
+  const [selectedRole, setSelectedRole] = useState<UserRole | null>(
+    role === "patient" ? "PATIENT" : null
+  );
+
   const [consented, setConsented] = useState(false);
-
-  const [selectedRole, setSelectedRole] =
-    useState<UserRole | null>(null);
-
-  const [isSubmitting, setIsSubmitting] =
-    useState(false);
-
-  const [isSuccess, setIsSuccess] =
-    useState(false);
-
-  const [intake, setIntake] =
-    useState<SignupIntake>(defaultSignupIntake);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [intake, setIntake] = useState<SignupIntake>(defaultSignupIntake);
 
   const API_URL = import.meta.env.VITE_API_URL || "https://api.breathecol.com";
 
-async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
-  e.preventDefault();
-  setIsSubmitting(true);
+  async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setIsSubmitting(true);
 
-  try {
-    const res = await fetch(`${API_URL}/intake/patient`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        firstName: intake.firstName,
-        lastName: intake.lastName,
-        preferredName: intake.preferredName,
-        email: intake.email,
-        patientID: intake.patientID,
-        phoneCode: intake.phoneCode,
-        phoneNumber: intake.phoneNumber,
-        contactMethod: intake.contactMethod,
-        age: intake.age,
-        feelings: intake.feelings,
-        priorSessions: intake.priorSessions,
-      }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/intake/patient`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          firstName: intake.firstName,
+          lastName: intake.lastName,
+          preferredName: intake.preferredName,
+          email: intake.email,
+          patientID: intake.patientID,
+          phoneCode: intake.phoneCode,
+          phoneNumber: intake.phoneNumber,
+          contactMethod: intake.contactMethod,
+          age: intake.age,
+          feelings: intake.feelings,
+          priorSessions: intake.priorSessions,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (!res.ok) {
-      console.error(data);
-      alert(data.error || "Could not submit form");
-      return;
+      if (!res.ok) {
+        console.error(data);
+        alert(data.error || "Could not submit form");
+        return;
+      }
+
+      setIsSuccess(true);
+    } catch (err) {
+      console.error(err);
+      alert("Could not connect to server");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSuccess(true);
-  } catch (err) {
-    console.error(err);
-    alert("Could not connect to server");
-  } finally {
-    setIsSubmitting(false);
   }
-}
 
   async function handlePsychologistSubmit(
     e: React.FormEvent<HTMLFormElement>
   ) {
     e.preventDefault();
-
     setIsSubmitting(true);
 
     try {
       console.log("PSYCHOLOGIST");
       console.table(intake);
-
       /**
        * Future:
        * POST /api/intake/psychologist
        */
-
       setIsSuccess(true);
     } finally {
       setIsSubmitting(false);
@@ -114,14 +116,11 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
   return (
     <div
       className="min-h-screen"
-      style={{
-        background: "var(--gradient-hero)",
-      }}
+      style={{ background: "var(--gradient-hero)" }}
     >
       <SiteHeader />
 
       <main className="mx-auto max-w-4xl px-6 pt-40 pb-24">
-
         {isSuccess ? (
           <SuccessMessage role={selectedRole!} />
         ) : (
@@ -137,7 +136,13 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
               <ConsentStep
                 es={es}
                 onAccept={() => setConsented(true)}
-                onBack={() => setSelectedRole(null)}
+                onBack={() => {
+                  if (cameFromStart) {
+                    router.navigate({ to: "/start" });
+                  } else {
+                    setSelectedRole(null);
+                  }
+                }}
               />
             )}
 
@@ -147,9 +152,17 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
                 setIntake={setIntake}
                 onSubmit={handlePatientSubmit}
                 isSubmitting={isSubmitting}
-                onBack={() => setSelectedRole(null)}
+                onBack={() => {
+                  if (cameFromStart) {
+                    router.navigate({ to: "/start" });
+                  } else {
+                    setSelectedRole(null);
+                    setConsented(false);
+                  }
+                }}
               />
             )}
+
             {/*
             {selectedRole === "PSYCHOLOGIST" && (
               <PsychologistForm
@@ -159,10 +172,10 @@ async function handlePatientSubmit(e: React.FormEvent<HTMLFormElement>) {
                 isSubmitting={isSubmitting}
                 onBack={() => setSelectedRole(null)}
               />
-            )} */}
+            )}
+            */}
           </>
         )}
-
       </main>
     </div>
   );
@@ -213,7 +226,12 @@ function ConsentStep({
       </label>
 
       <div className="mt-6 flex gap-3">
-        <Button type="button" variant="ghost" className="rounded-full" onClick={onBack}>
+        <Button
+          type="button"
+          variant="ghost"
+          className="rounded-full"
+          onClick={onBack}
+        >
           {es ? "Atrás" : "Back"}
         </Button>
         <Button
